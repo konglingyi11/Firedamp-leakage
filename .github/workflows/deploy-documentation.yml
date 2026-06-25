@@ -16,7 +16,6 @@ permissions:
 
 env:
   NODE_VERSION: '22'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build-and-deploy:
@@ -161,7 +160,9 @@ jobs:
             -o StrictHostKeyChecking=yes
           )
 
-          ssh "${SSH_OPTS[@]}" "$SERVER_USER@$SERVER_HOST" "mkdir -p '$REMOTE_TMP'"
+          echo "SERVER_USER length: ${#SERVER_USER}"
+          echo "REMOTE_TMP='${REMOTE_TMP}'"
+          ssh "${SSH_OPTS[@]}" "$SERVER_USER@$SERVER_HOST" "id; pwd; mkdir -p '$REMOTE_TMP'"
           scp "${SCP_OPTS[@]}" deploy.tar.gz VERSION.txt "$SERVER_USER@$SERVER_HOST:$REMOTE_TMP/"
 
           ssh "${SSH_OPTS[@]}" "$SERVER_USER@$SERVER_HOST" \
