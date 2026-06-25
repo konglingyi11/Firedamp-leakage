@@ -139,7 +139,7 @@ jobs:
           set -euo pipefail
 
           SSH_DIR="$RUNNER_TEMP/ssh"
-          REMOTE_TMP="/tmp/doc-api-${{ github.run_id }}-${{ github.run_attempt }}"
+          REMOTE_TMP="/home/$SERVER_USER/doc-api-${{ github.run_id }}-${{ github.run_attempt }}"
 
           mkdir -p "$SSH_DIR"
           chmod 700 "$SSH_DIR"
