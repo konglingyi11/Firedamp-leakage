@@ -122,7 +122,8 @@ jobs:
             exit 1
           fi
 
-          tar -czf deploy.tar.gz -C dist .
+          find dist -mindepth 1 -maxdepth 1 -printf '%P\0' \
+            | tar --null -czf deploy.tar.gz -C dist -T -
           echo "$(date +'%Y-%m-%d %H:%M:%S') - ${{ steps.version.outputs.tag }}" > VERSION.txt
 
       - name: Deploy to server
@@ -186,9 +187,10 @@ jobs:
           fi
 
           find "$DEPLOY_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-          tar -xzf "$REMOTE_TMP/deploy.tar.gz" -C "$DEPLOY_DIR"
+          tar --no-overwrite-dir -xzf "$REMOTE_TMP/deploy.tar.gz" -C "$DEPLOY_DIR"
           mv "$REMOTE_TMP/VERSION.txt" "$DEPLOY_DIR/VERSION.txt"
-          chmod -R u=rwX,g=rX,o=rX "$DEPLOY_DIR"
+          find "$DEPLOY_DIR" -mindepth 1 -type d -exec chmod u=rwx,g=rx,o=rx {} +
+          find "$DEPLOY_DIR" -mindepth 1 -type f -exec chmod u=rw,g=r,o=r {} +
           rm -rf "$REMOTE_TMP"
 
           if [ ! -f "$DEPLOY_DIR/index.html" ]; then
