@@ -1,0 +1,227 @@
+name: Deploy Vue 3 App
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate deployment secrets
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR }}
+          BACKUP_DIR: ${{ secrets.BACKUP_DIR }}
+        run: |
+          set -euo pipefail
+
+          for name in SERVER_HOST SERVER_USER SERVER_SSH_KEY DEPLOY_DIR BACKUP_DIR; do
+            if [ -z "${!name}" ]; then
+              echo "Missing required GitHub Secret: $name"
+              exit 1
+            fi
+          done
+
+          echo "SERVER_PORT=${SERVER_PORT:-22}" >> "$GITHUB_ENV"
+          echo "DEPLOY_DIR=$DEPLOY_DIR" >> "$GITHUB_ENV"
+          echo "BACKUP_DIR=$BACKUP_DIR" >> "$GITHUB_ENV"
+
+      - name: Generate version
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+
+          LATEST_TAG=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 1 || true)
+
+          if [ -n "$REQUESTED_VERSION" ]; then
+            VERSION="${REQUESTED_VERSION#v}"
+          elif [ -z "$LATEST_TAG" ]; then
+            VERSION="1.0.0"
+          else
+            RAW_VERSION="${LATEST_TAG#v}"
+            MAJOR="$(echo "$RAW_VERSION" | cut -d. -f1)"
+            MINOR="$(echo "$RAW_VERSION" | cut -d. -f2)"
+            PATCH="$(echo "$RAW_VERSION" | cut -d. -f3)"
+            PATCH=$((PATCH + 1))
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version. Expected v1.2.3 or 1.2.3, got: ${REQUESTED_VERSION:-$VERSION}"
+            exit 1
+          fi
+
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Git tag already exists: $TAG"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Generated version: $VERSION"
+          echo "Generated tag: $TAG"
+          echo "Previous version: ${LATEST_TAG:-none}"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: |
+          set -euo pipefail
+          pnpm build
+
+      - name: Create deployment package
+        run: |
+          set -euo pipefail
+
+          if [ ! -d "dist" ]; then
+            echo "Error: dist directory does not exist"
+            exit 1
+          fi
+
+          if [ -z "$(ls -A dist 2>/dev/null)" ]; then
+            echo "Error: dist directory is empty"
+            exit 1
+          fi
+
+          find dist -mindepth 1 -maxdepth 1 -printf '%P\0' \
+            | tar --null -czf deploy.tar.gz -C dist -T -
+          echo "$(date +'%Y-%m-%d %H:%M:%S') - ${{ steps.version.outputs.tag }}" > VERSION.txt
+
+      - name: Deploy to server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || 22 }}
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR }}
+          BACKUP_DIR: ${{ secrets.BACKUP_DIR }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: |
+          set -euo pipefail
+
+          SSH_DIR="$RUNNER_TEMP/ssh"
+          REMOTE_TMP="/home/$SERVER_USER/doc-api-${{ github.run_id }}-${{ github.run_attempt }}"
+
+          mkdir -p "$SSH_DIR"
+          chmod 700 "$SSH_DIR"
+          printf '%s\n' "$SERVER_SSH_KEY" > "$SSH_DIR/deploy_key"
+          chmod 600 "$SSH_DIR/deploy_key"
+
+          ssh-keyscan -p "$SERVER_PORT" "$SERVER_HOST" >> "$SSH_DIR/known_hosts"
+
+          SSH_OPTS=(
+            -i "$SSH_DIR/deploy_key"
+            -p "$SERVER_PORT"
+            -o UserKnownHostsFile="$SSH_DIR/known_hosts"
+            -o StrictHostKeyChecking=yes
+          )
+          SCP_OPTS=(
+            -i "$SSH_DIR/deploy_key"
+            -P "$SERVER_PORT"
+            -o UserKnownHostsFile="$SSH_DIR/known_hosts"
+            -o StrictHostKeyChecking=yes
+          )
+
+          echo "SERVER_USER length: ${#SERVER_USER}"
+          echo "REMOTE_TMP='${REMOTE_TMP}'"
+          ssh "${SSH_OPTS[@]}" "$SERVER_USER@$SERVER_HOST" "id; pwd; mkdir -p '$REMOTE_TMP'"
+          scp "${SCP_OPTS[@]}" deploy.tar.gz VERSION.txt "$SERVER_USER@$SERVER_HOST:$REMOTE_TMP/"
+
+          ssh "${SSH_OPTS[@]}" "$SERVER_USER@$SERVER_HOST" \
+            "DEPLOY_DIR='$DEPLOY_DIR' BACKUP_DIR='$BACKUP_DIR' REMOTE_TMP='$REMOTE_TMP' VERSION='${{ steps.version.outputs.tag }}' bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          if [ -z "$DEPLOY_DIR" ] || [ -z "$BACKUP_DIR" ]; then
+            echo "DEPLOY_DIR and BACKUP_DIR must not be empty"
+            exit 1
+          fi
+
+          mkdir -p "$DEPLOY_DIR" "$BACKUP_DIR"
+
+          if [ -d "$DEPLOY_DIR" ] && [ "$(ls -A "$DEPLOY_DIR" 2>/dev/null)" ]; then
+            BACKUP_NAME="backup-$(date +'%Y%m%d-%H%M%S').tar.gz"
+            tar -czf "$BACKUP_DIR/$BACKUP_NAME" -C "$DEPLOY_DIR" .
+            echo "Backup created: $BACKUP_NAME"
+
+            cd "$BACKUP_DIR"
+            ls -t backup-*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f
+          fi
+
+          find "$DEPLOY_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+          tar --no-overwrite-dir -xzf "$REMOTE_TMP/deploy.tar.gz" -C "$DEPLOY_DIR"
+          mv "$REMOTE_TMP/VERSION.txt" "$DEPLOY_DIR/VERSION.txt"
+          find "$DEPLOY_DIR" -mindepth 1 -type d -exec chmod u=rwx,g=rx,o=rx {} +
+          find "$DEPLOY_DIR" -mindepth 1 -type f -exec chmod u=rw,g=r,o=r {} +
+          rm -rf "$REMOTE_TMP"
+
+          if [ ! -f "$DEPLOY_DIR/index.html" ]; then
+            echo "Deployment health check failed: index.html is missing"
+            exit 1
+          fi
+
+          echo "Deployment completed: $VERSION"
+          REMOTE_SCRIPT
+
+          if [ -n "${SITE_URL:-}" ]; then
+            curl --fail --silent --show-error --max-time 20 "$SITE_URL" >/dev/null
+            echo "Site health check passed: $SITE_URL"
+          fi
+
+      - name: Create Git tag
+        run: |
+          set -euo pipefail
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Deployment summary
+        run: |
+          echo "## Deployment Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: ${{ steps.version.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Deployed host: ${{ secrets.SERVER_HOST }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Deploy dir: configured by DEPLOY_DIR secret" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Backup dir: configured by BACKUP_DIR secret" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Site URL: configured by optional SITE_URL secret" >> "$GITHUB_STEP_SUMMARY"
