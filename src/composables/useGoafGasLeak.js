@@ -41,6 +41,7 @@ const DEFAULT_PARAMS = {
   smokeSize: 1.0,
   smokeDensity: 0.35,
   smokeSpeed: 0.30,
+  smokeOpacity: 1.0,
   /**
    * 围岩层空心区域配置：每个空洞从对应侧的实心块里挖掉一块。
    * center / size 均为 0-1 相对值，基于该侧整体块（煤+岩）的包围盒。
@@ -1430,7 +1431,7 @@ export function createGoafGasLeakSystem({
           opacity: currentParams.gasOpacity,
           syncMaterial: () => {
             if (smokeSystem?.uniforms?.uDensity) {
-              smokeSystem.uniforms.uDensity.value = 0.22 + controller.methanePercent * 0.1
+              smokeSystem.uniforms.uDensity.value = currentParams.smokeOpacity * (0.22 + controller.methanePercent * 0.1)
             }
           },
         },
@@ -1440,7 +1441,7 @@ export function createGoafGasLeakSystem({
         },
         setConcentration: (v) => {
           if (smokeSystem?.uniforms?.uDensity) {
-            smokeSystem.uniforms.uDensity.value = 0.2 + v * 0.35
+            smokeSystem.uniforms.uDensity.value = currentParams.smokeOpacity * (0.2 + v * 0.35)
           }
         },
         setColor: (c) => {
