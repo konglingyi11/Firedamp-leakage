@@ -2511,13 +2511,14 @@ function focusCameraOnRealModelInitial() {
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z, 0.5)
   const fovRad = (camera.fov * Math.PI) / 360
-  const distance = (maxDim / (2 * Math.tan(fovRad))) * 1.35
+  const distance = (maxDim / (2 * Math.tan(fovRad))) * 0.5
 
   controls.target.copy(center)
+  // 正面视角：从 -Y 方向看向模型中心（Z 轴为竖直向上）
   camera.position.set(
-    center.x + distance * 0.85,
-    center.y - distance * 1.15,
-    center.z + distance * 0.95,
+    center.x,
+    center.y - distance,
+    center.z,
   )
   camera.near = Math.max(distance / 100, 0.01)
   camera.far = Math.max(camera.far || 0, distance * 80, maxDim * 40, 500)
@@ -2527,7 +2528,7 @@ function focusCameraOnRealModelInitial() {
   controls.update()
 
   realModelCameraFocusedTaskKey = taskKey
-  console.log('[RealModelCamera] 已对齐真实模型初始视角:', {
+  console.log('[RealModelCamera] 已对齐真实模型初始视角（正面）:', {
     taskId,
     center: center.toArray(),
     distance,
@@ -3576,8 +3577,9 @@ function resetMainCameraView() {
   }
 
   const maxDim = Math.max(size.x, size.y, size.z, 1)
-  const dist = Math.max(8, maxDim * 1.8)
-  camera.position.set(center.x + dist, center.y + dist * 0.8, center.z + dist)
+  const dist = Math.max(8, maxDim * 1.2)
+  // 正面视角：从 -Y 方向看向模型中心
+  camera.position.set(center.x, center.y - dist, center.z)
   camera.near = 0.01
   camera.far = Math.max(camera.far || 0, dist * 20, maxDim * 20, 10000)
   camera.lookAt(center)

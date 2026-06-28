@@ -171,10 +171,11 @@ function initScene() {
   grid.material.transparent = true
   axisGroup.add(grid)
 
-  // 创建相机
+  // 创建相机（正面视角：从 -Y 方向看向原点，Z 轴为竖直向上）
   globalCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 20000)
-  globalCamera.position.set(8, -10, 8)
+  globalCamera.position.set(0, -20, 0)
   globalCamera.up.set(0, 0, 1)
+  globalCamera.lookAt(0, 0, 0)
 
   // 创建射线检测器
   raycaster = new THREE.Raycaster()

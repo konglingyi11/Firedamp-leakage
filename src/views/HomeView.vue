@@ -751,28 +751,31 @@ function ensureCompletedTaskBaseLayers(task) {
     loaded: true,
     isMock: true,
   })
-  registerGeneratedLayer('smoke', {
-    smokeTotal: true,
-    visible: false,
-    ready: true,
-    loaded: true,
-    loadSource: 'base',
-  })
-  registerGeneratedLayer('smoke', {
-    label: '烟雾层-人体层',
-    smokePersonLayer: true,
-    smokeReleaseZoneName: 'head-release-zone',
-    visible: false,
-    ready: true,
-    loaded: true,
-    loadSource: 'base',
-  })
-  registerGeneratedLayer('video', {
-    label: '视频.mp4',
-    visible: false,
-    ready: true,
-    loaded: true,
-  })
+  // 采空区任务不需要通用的烟雾层/人体烟雾层/视频骨骼识别层
+  if (!isGoafTask(task)) {
+    registerGeneratedLayer('smoke', {
+      smokeTotal: true,
+      visible: false,
+      ready: true,
+      loaded: true,
+      loadSource: 'base',
+    })
+    registerGeneratedLayer('smoke', {
+      label: '烟雾层-人体层',
+      smokePersonLayer: true,
+      smokeReleaseZoneName: 'head-release-zone',
+      visible: false,
+      ready: true,
+      loaded: true,
+      loadSource: 'base',
+    })
+    registerGeneratedLayer('video', {
+      label: '视频.mp4',
+      visible: false,
+      ready: true,
+      loaded: true,
+    })
+  }
 }
 
 const taskListRef = ref(null)
@@ -2134,8 +2137,9 @@ const handleTaskCreated = async (task) => {
     hasAppliedSettings.value = false
     handleTimelineStop()
 
+    // 模拟任务不进入参数设置等依赖后端的模块，直接留在首页展示模型与瓦斯面板
     setTimeout(() => {
-      activeModule.value = 'parameters'
+      activeModule.value = 'home'
     }, 500)
     return
   }

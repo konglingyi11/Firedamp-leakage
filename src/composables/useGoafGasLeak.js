@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GasAccidentController, GasVisualAdapter } from '@/utils/gasAccident'
 import { createSmokeTexture, SmokeSystem } from '@/utils/smokeSystem'
-import { FlameEffect, ExplosionEffect } from '@/components/three/goafGasEffects.js'
+import { FlameEffect, ExplosionEffect, FireballEffect } from '@/components/three/goafGasEffects.js'
 
 /**
  * 采空区瓦斯泄漏可视化集成（可配置版）
@@ -14,7 +14,7 @@ import { FlameEffect, ExplosionEffect } from '@/components/three/goafGasEffects.
 
 const DEFAULT_PARAMS = {
   ventilationScenario: 'weak',
-  leakRatePercent: 0.03,
+  leakRatePercent: 0.02,
   methaneLowerExplosiveLimit: 5,
   methaneUpperExplosiveLimit: 16,
   ignitionProtectionFailed: true,
@@ -40,7 +40,7 @@ const DEFAULT_PARAMS = {
   explosionColor: '#ffaa33',
   smokeSize: 1.0,
   smokeDensity: 0.35,
-  smokeSpeed: 0.30,
+  smokeSpeed: 0.45,
   smokeOpacity: 1.0,
   /**
    * 围岩层空心区域配置：每个空洞从对应侧的实心块里挖掉一块。
@@ -387,6 +387,8 @@ export function createGoafGasLeakSystem({
   let isAutoIgnite = false
   let flameEffect = null
   let explosionEffect = null
+  let fireballs = [] // 爆炸后沿矿道蔓延的火球列表
+  let explosionTimer = null // 延迟爆炸定时器（点火后5s触发）
   let ignitionBlockId = 0 // 点火时生成的煤炭块 id（自燃效果）
   let surroundingGroup = null // 采空区两侧煤层 + 岩石层
   let dynamicBlocksGroup = null // 运行时动态添加的煤/石块
@@ -1093,9 +1095,9 @@ export function createGoafGasLeakSystem({
   }
 
   function buildDefaultGasSources() {
-    // 默认单个泄漏源，位置固定为 (2.8, -3.5, 1.9)
+    // 默认单个泄漏源，位置固定为 (3.3, -3.5, 1.9)，与点火煤块坐标一致
     return [{
-      position: new THREE.Vector3(2.8, -3.5, 1.9),
+      position: new THREE.Vector3(3.3, -3.5, 1.9),
       type: 'goaf',
       emissionFactor: 1.0,
       height: 2,
@@ -1212,7 +1214,8 @@ export function createGoafGasLeakSystem({
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
       let nx = Math.sin(phi) * Math.cos(theta)
-      let ny = Math.abs(Math.sin(phi) * Math.sin(theta)) * 0.75 + 0.55
+      // 提高 ny 权重，使初始速度更显著地朝上
+      let ny = Math.abs(Math.sin(phi) * Math.sin(theta)) * 0.4 + 0.85
       let nz = Math.cos(phi)
       const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1
       nx /= len
@@ -1260,9 +1263,15 @@ export function createGoafGasLeakSystem({
         density: currentParams.smokeDensity,
         velocityField: {
           worldScale: 10,
-          strength: 0.8,
+          strength: 1.0,
           stride: 2,
-          sample: () => ({ vx: 0, vy: 0.35, vz: 0, speed: 0.35 }),
+          // 增强持续向上的浮力场，让瓦斯更快向上部积聚
+          sample: () => ({
+            vx: 0,
+            vy: 0.4 + currentParams.smokeSpeed * 0.9,
+            vz: 0,
+            speed: 0.4 + currentParams.smokeSpeed * 0.9,
+          }),
         },
         maxLifetime: 50,
         spawnDuration: 10,
@@ -1397,8 +1406,16 @@ export function createGoafGasLeakSystem({
           }
         },
         explosion: () => {
-          console.log('[GoafGas] 爆炸触发')
-          if (currentParams.explosionEnabled) explosionEffect?.trigger()
+          console.log('[GoafGas] 爆炸触发（延迟5s后生效，模拟火焰蔓延后爆炸）')
+          if (!currentParams.explosionEnabled) return
+          // 清理上一次的定时器，避免重复触发
+          if (explosionTimer) { clearTimeout(explosionTimer); explosionTimer = null }
+          // 点火后火焰先蔓延5s，再触发爆炸 + 火球沿矿道蔓延
+          explosionTimer = setTimeout(() => {
+            explosionTimer = null
+            explosionEffect?.trigger()
+            triggerFireballPropagation()
+          }, 5000)
         },
         safetyAlarm: (level) => console.log('[GoafGas] 安全等级', level),
       },
@@ -1423,6 +1440,61 @@ export function createGoafGasLeakSystem({
       maxRadius: 8 + currentParams.explosionIntensity * 6,
     })
     explosionEffect.addTo(scene)
+
+    /**
+     * 爆炸触发后沿矿道方向蔓延的火球。
+     * 取模型包围盒的长边方向作为矿道走向，从点火点向正负两侧各发射一个火球。
+     */
+    function triggerFireballPropagation() {
+      if (!scene || !ignitionSource) return
+      // 清理上一轮残留的火球
+      disposeFireballs()
+
+      // 取模型包围盒长边方向作为矿道走向
+      const bounds = getModelBounds()
+      const size = new THREE.Vector3()
+      bounds.getSize(size)
+      let dir = new THREE.Vector3(1, 0, 0) // 默认 X 轴
+      if (size.x >= size.y && size.x >= size.z) {
+        dir.set(1, 0, 0)
+      } else if (size.y >= size.x && size.y >= size.z) {
+        dir.set(0, 1, 0)
+      } else {
+        dir.set(0, 0, 1)
+      }
+
+      // 蔓延距离取长边长度的 80%
+      const maxDist = Math.max(20, Math.max(size.x, size.y, size.z) * 0.8)
+      const fireballRadius = Math.max(1.2, (currentParams.flameSize || 2.5) * 0.7)
+
+      // 沿正负两个方向各创建一个火球
+      const directions = [dir.clone(), dir.clone().negate()]
+      for (const d of directions) {
+        const fb = new FireballEffect({
+          position: ignitionSource,
+          direction: d,
+          color: currentParams.explosionColor || '#ff5500',
+          intensity: currentParams.explosionIntensity || 1.5,
+          radius: fireballRadius,
+          speed: 10,
+          maxDistance: maxDist,
+          duration: 3.5,
+          particleCount: 80,
+        })
+        fb.addTo(scene)
+        fb.trigger()
+        fireballs.push(fb)
+      }
+      console.log('[GoafGas] 火球蔓延触发，方向:', dir.toArray(), '距离:', maxDist)
+    }
+
+    function disposeFireballs() {
+      for (const fb of fireballs) {
+        fb.removeFrom(scene)
+        fb.dispose?.()
+      }
+      fireballs = []
+    }
 
     // 视觉适配器
     controller.setVisualAdapter(new GasVisualAdapter({
@@ -1484,6 +1556,8 @@ export function createGoafGasLeakSystem({
       }
       flameEffect?.update(dt, elapsed)
       explosionEffect?.update(dt)
+      // 更新所有活跃的火球
+      for (const fb of fireballs) fb.update(dt)
 
       if (isAutoIgnite && controller.currentStage === 'leaking' && controller.methanePercent >= controller.settings.methaneUpperExplosiveLimit * 0.85) {
         controller.requestManualIgnition()
@@ -1512,6 +1586,17 @@ export function createGoafGasLeakSystem({
       removeFrameCallback(frameCallback)
       frameCallback = null
     }
+    // 清理延迟爆炸定时器
+    if (explosionTimer) {
+      clearTimeout(explosionTimer)
+      explosionTimer = null
+    }
+    // 清理火球
+    for (const fb of fireballs) {
+      fb.removeFrom(scene)
+      fb.dispose?.()
+    }
+    fireballs = []
     if (smokeSystem) {
       smokeSystem.mesh?.geometry?.dispose()
       smokeSystem.mesh?.material?.dispose()

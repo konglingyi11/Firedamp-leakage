@@ -255,11 +255,12 @@ export class SmokeSystem {
     this.positions[i * 3 + 1] = py
     this.positions[i * 3 + 2] = pz
 
+    // 提高初始上升速度，让瓦斯更快向上扩散
     const upwardSpeed = surfaceSeed
-      ? (0.03 + Math.random() * 0.04) * p.speed
+      ? (0.08 + Math.random() * 0.08) * p.speed
       : gridSeed
-      ? (0.003 + Math.random() * 0.012) * p.speed
-      : (0.03 + Math.random() * 0.05) * p.speed
+      ? (0.006 + Math.random() * 0.018) * p.speed
+      : (0.08 + Math.random() * 0.08) * p.speed
     const spreadSpeed = surfaceSeed
       ? (0.04 + Math.random() * 0.05) * p.range
       : gridSeed
@@ -537,13 +538,12 @@ export class SmokeSystem {
       this.velocities[i * 3] += (-dy / dist) * swirlStrength * 0.6 * delta
       this.velocities[i * 3 + 1] += ((dx - dz) / dist) * swirlStrength * 0.6 * delta
       this.velocities[i * 3 + 2] += (dy / dist) * swirlStrength * 0.6 * delta
-      // 径向向外扩散力：球面向外，让烟雾在三维空间蔓延
-      const radialStrength = 0.025 * p.range * (1.0 - t * 0.3)
+      // 径向向外扩散力：适度水平蔓延，同时避免过度分散，利于顶部积聚
+      const radialStrength = 0.012 * p.range * (1.0 - t * 0.3)
       this.velocities[i * 3] += (dx / dist) * radialStrength * delta
-      this.velocities[i * 3 + 1] += (dy / dist) * radialStrength * delta
       this.velocities[i * 3 + 2] += (dz / dist) * radialStrength * delta
-      // 浮力：轻微上升趋势，不主导扩散方向
-      const buoyancy = 0.003 * (p.speed || 0.2) * (1.0 - t * 0.5)
+      // 浮力：明显上升趋势，让瓦斯在上部快速积聚
+      const buoyancy = 0.015 * (p.speed || 0.2) * (1.0 - t * 0.4)
       this.velocities[i * 3 + 1] += buoyancy * delta
 
       const swayX = Math.sin(elapsed * 0.2 + i * 0.13) * 0.003 * p.swirl

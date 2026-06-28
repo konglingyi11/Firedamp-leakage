@@ -375,7 +375,7 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       host: '0.0.0.0', // 关键配置：监听所有网络接口
-      port: 8010,       // 你的端口号
+      port: 8011,       // 你的端口号
       proxy: {
         '/api': {
           target: apiProxyTarget,

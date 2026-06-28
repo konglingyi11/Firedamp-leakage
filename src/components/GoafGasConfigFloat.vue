@@ -19,7 +19,11 @@ const emit = defineEmits(['refresh-sources'])
 
 const player = computed(() => {
   if (!props.playerRef) return null
-  return isRef(props.playerRef) ? props.playerRef.value || null : props.playerRef
+  // 父组件可能传 ref 实例，也可能已经解包，兼容两种情况
+  const raw = isRef(props.playerRef) ? props.playerRef.value || null : props.playerRef
+  // 如果 raw 本身还是 ref（异步组件多层解包），再解一次
+  if (raw && isRef(raw)) return raw.value || null
+  return raw
 })
 
 // 状态
@@ -570,10 +574,10 @@ defineExpose({
             <span>泄漏速率</span>
             <input
               type="range"
-              min="0.05"
-              max="1"
-              step="0.05"
-              :value="goafGasParams.leakRatePercent ?? 0.35"
+              min="0.01"
+              max="0.5"
+              step="0.01"
+              :value="goafGasParams.leakRatePercent ?? 0.02"
               @input="
                 updateGoafGasParam(
                   'leakRatePercent',
@@ -581,7 +585,7 @@ defineExpose({
                 )
               " />
             <span class="goaf-gas-value">{{
-              (goafGasParams.leakRatePercent ?? 0.35).toFixed(2)
+              (goafGasParams.leakRatePercent ?? 0.02).toFixed(2)
             }}</span>
           </label>
           <label class="goaf-gas-row">
@@ -668,9 +672,9 @@ defineExpose({
             <input
               type="range"
               min="0.05"
-              max="1.0"
+              max="0.6"
               step="0.05"
-              :value="goafGasParams.smokeSpeed ?? 0.25"
+              :value="goafGasParams.smokeSpeed ?? 0.45"
               @input="
                 updateGoafGasParam(
                   'smokeSpeed',
@@ -678,7 +682,7 @@ defineExpose({
                 )
               " />
             <span class="goaf-gas-value">{{
-              (goafGasParams.smokeSpeed ?? 0.25).toFixed(2)
+              (goafGasParams.smokeSpeed ?? 0.45).toFixed(2)
             }}</span>
           </label>
           <label class="goaf-gas-row">

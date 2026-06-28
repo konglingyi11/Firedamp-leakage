@@ -170,11 +170,11 @@ const fetchModels = async () => {
     // 追加本地「采空区瓦斯泄漏模拟数据」卡片
     models.value.push({
       id: createMockGoafModelInfo().id,
-      name: '采空区瓦斯泄漏模拟数据',
+      name: '采空区瓦斯泄漏',
       category: '采空区',
       survivalSpace: '-',
-      difficulty: '本地模拟，无需后端',
-      image: '/model-preview-1.png',
+      difficulty: '-',
+      image: '/public/采空区/图片.png',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       is_analyzed: true,
