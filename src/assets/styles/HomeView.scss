@@ -1891,6 +1891,18 @@
   pointer-events: auto;
 }
 
+/* 二级容器：把已生成图层和采空区瓦斯配置面板纵向堆叠 */
+.content-left-rail-secondary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  flex-shrink: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
 .content-left-rail.with-timeline {
   bottom: 6.25rem;
 }

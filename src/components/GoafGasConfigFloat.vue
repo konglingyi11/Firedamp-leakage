@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, isRef } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CaretTop, CaretBottom } from '@element-plus/icons-vue'
 import { isGoafTask } from '@/utils/taskType'
@@ -17,12 +17,16 @@ const props = defineProps({
 
 const emit = defineEmits(['refresh-sources'])
 
-const player = computed(() => player.value?.value || null)
+const player = computed(() => {
+  if (!props.playerRef) return null
+  return isRef(props.playerRef) ? props.playerRef.value || null : props.playerRef
+})
 
 // 状态
 const goafGasState = ref({ stage: 'idle' })
 const goafGasSources = ref([])
 const goafGasParams = ref({})
+const collapsed = ref(false)
 const goafGasParamsExpanded = ref(true)
 const goafBlocks = ref([])
 const goafBlockScale = ref(0.5)
@@ -233,13 +237,27 @@ defineExpose({
 </script>
 
 <template>
-  <div class="goaf-gas-config-float">
+  <div class="goaf-gas-config-float" :class="{ collapsed: collapsed }">
     <div class="goaf-gas-config-header">
       <span class="goaf-gas-config-title">采空区瓦斯泄漏</span>
-      <span class="goaf-gas-config-stage">{{ goafGasState.stage }}</span>
+      <div class="goaf-gas-config-header-right">
+        <span class="goaf-gas-config-stage">{{ goafGasState.stage }}</span>
+        <button
+          type="button"
+          class="goaf-gas-config-toggle"
+          :title="collapsed ? '展开' : '折叠'"
+          @click="collapsed = !collapsed">
+          <el-icon>
+            <CaretBottom v-if="collapsed" />
+            <CaretTop v-else />
+          </el-icon>
+        </button>
+      </div>
     </div>
 
-    <div class="goaf-gas-config-body">
+    <div v-show="!collapsed" class="goaf-gas-config-body">
+
+
       <!-- 触发按钮 -->
       <div class="goaf-gas-actions">
         <button
@@ -645,6 +663,24 @@ defineExpose({
               :value="goafGasParams.gasColor ?? '#9db3a8'"
               @change="updateGoafGasParam('gasColor', $event.target.value)" />
           </label>
+          <label class="goaf-gas-row">
+            <span>烟雾速度</span>
+            <input
+              type="range"
+              min="0.05"
+              max="1.0"
+              step="0.05"
+              :value="goafGasParams.smokeSpeed ?? 0.25"
+              @input="
+                updateGoafGasParam(
+                  'smokeSpeed',
+                  Number($event.target.value),
+                )
+              " />
+            <span class="goaf-gas-value">{{
+              (goafGasParams.smokeSpeed ?? 0.25).toFixed(2)
+            }}</span>
+          </label>
 
           <div class="goaf-gas-section-title" style="margin-top: 0.5rem">效果开关</div>
           <label class="goaf-gas-row">
@@ -724,6 +760,39 @@ defineExpose({
   font-size: var(--text-caption, 0.75rem);
   color: var(--text-secondary, rgba(255, 255, 255, 0.7));
   text-transform: capitalize;
+}
+
+.goaf-gas-config-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.goaf-gas-config-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.8));
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.goaf-gas-config-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary, rgba(255, 255, 255, 0.95));
+}
+
+.goaf-gas-config-float.collapsed {
+  max-height: 2.2rem;
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
 .goaf-gas-actions {

@@ -140,9 +140,15 @@ export class SmokeSystem {
     this.geometry.setAttribute('color', new THREE.BufferAttribute(this.colors, 3))
     this.geometry.setAttribute('random', new THREE.BufferAttribute(this.randoms, 4))
 
-    this.baseColor = new THREE.Color(runtimeParams.color?.particle ?? [0.22, 0.24, 0.26])
-    this.scatterColor = new THREE.Color(runtimeParams.color?.scatter ?? [0.72, 0.74, 0.76])
-    this.absorbColor = new THREE.Color(runtimeParams.color?.absorb ?? [0.48, 0.5, 0.53])
+    function toColor(value, fallback) {
+      const arr = value ?? fallback
+      if (Array.isArray(arr)) return new THREE.Color(arr[0] ?? 0, arr[1] ?? 0, arr[2] ?? 0)
+      return new THREE.Color(arr)
+    }
+
+    this.baseColor = toColor(runtimeParams.color?.particle, [0.22, 0.24, 0.26])
+    this.scatterColor = toColor(runtimeParams.color?.scatter, [0.72, 0.74, 0.76])
+    this.absorbColor = toColor(runtimeParams.color?.absorb, [0.48, 0.5, 0.53])
 
     this.uniforms = {
       uTime: { value: 0.0 },
@@ -335,7 +341,7 @@ export class SmokeSystem {
    * @param {string|THREE.Color|Array<number>} color 基础颜色
    */
   setColor(color) {
-    const base = new THREE.Color(color)
+    const base = Array.isArray(color) ? new THREE.Color(color[0] ?? 0, color[1] ?? 0, color[2] ?? 0) : new THREE.Color(color)
     this.baseColor.copy(base)
     this.scatterColor.setRGB(base.r * 0.9, base.g * 0.9, base.b * 0.9)
     this.absorbColor.setRGB(base.r * 0.35, base.g * 0.35, base.b * 0.35)

@@ -40,6 +40,7 @@ const DEFAULT_PARAMS = {
   explosionColor: '#ffaa33',
   smokeSize: 1.0,
   smokeDensity: 0.35,
+  smokeSpeed: 0.30,
   /**
    * 围岩层空心区域配置：每个空洞从对应侧的实心块里挖掉一块。
    * center / size 均为 0-1 相对值，基于该侧整体块（煤+岩）的包围盒。
@@ -1206,11 +1207,11 @@ export function createGoafGasLeakSystem({
     for (let i = 0; i < count; i++) {
       const source = visibleSources[i % visibleSources.length]
       const spread = 0.4 + Math.random() * 0.6
-      // 让初始扩散方向偏向正 Y（向上进入矿道），同时保留 X/Z 水平扩散。
+      // 让初始扩散方向明显偏向正 Y（瓦斯向上部积聚），同时保留 X/Z 水平扩散。
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
       let nx = Math.sin(phi) * Math.cos(theta)
-      let ny = Math.abs(Math.sin(phi) * Math.sin(theta)) * 0.6 + 0.4
+      let ny = Math.abs(Math.sin(phi) * Math.sin(theta)) * 0.75 + 0.55
       let nz = Math.cos(phi)
       const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1
       nx /= len
@@ -1252,15 +1253,15 @@ export function createGoafGasLeakSystem({
       gasGroup,
       {
         size: currentParams.smokeSize,
-        speed: 0.35,
-        range: 0.75,
+        speed: currentParams.smokeSpeed,
+        range: 0.65,
         swirl: 1.3,
         density: currentParams.smokeDensity,
         velocityField: {
           worldScale: 10,
           strength: 0.8,
           stride: 2,
-          sample: () => ({ vx: 0, vy: 0.25, vz: 0, speed: 0.25 }),
+          sample: () => ({ vx: 0, vy: 0.35, vz: 0, speed: 0.35 }),
         },
         maxLifetime: 50,
         spawnDuration: 10,
@@ -1673,7 +1674,7 @@ export function createGoafGasLeakSystem({
       explosionEffect.intensity = currentParams.explosionIntensity
       explosionEffect.maxRadius = 8 + currentParams.explosionIntensity * 6
     }
-    if (params.smokeSize !== undefined || params.smokeDensity !== undefined || params.gasParticleCount !== undefined || params.collisionEnabled !== undefined) {
+    if (params.smokeSize !== undefined || params.smokeDensity !== undefined || params.smokeSpeed !== undefined || params.gasParticleCount !== undefined || params.collisionEnabled !== undefined) {
       rebuildSmokeSystem()
     }
     // 围岩层开关/轴向/空洞配置变化时重建围岩层，并刷新烟雾碰撞体

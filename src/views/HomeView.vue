@@ -3007,10 +3007,18 @@ function handleRadarMediumApplySettings() {
           </div>
         </aside>
 
-        <!-- 已生成图层：勾选显隐时向 UE 发送 vizLayerVisibility -->
+        <!-- 已生成图层 + 采空区瓦斯配置：纵向排列的二级容器 -->
         <div
-          v-if="readyGeneratedVizLayers.length > 0 || isBatchLoading"
-          class="generated-layers-float">
+          v-if="
+            readyGeneratedVizLayers.length > 0 ||
+            isBatchLoading ||
+            isGoafTask(currentTask)
+          "
+          class="content-left-rail-secondary">
+          <!-- 已生成图层：勾选显隐时向 UE 发送 vizLayerVisibility -->
+          <div
+            v-if="readyGeneratedVizLayers.length > 0 || isBatchLoading"
+            class="generated-layers-float">
           <button
             type="button"
             class="glf-toggle"
@@ -3788,12 +3796,13 @@ function handleRadarMediumApplySettings() {
           </div>
         </div>
 
-        <!-- 采空区瓦斯泄漏配置面板 -->
-        <GoafGasConfigFloat
-          v-if="isGoafTask(currentTask)"
-          ref="goafGasConfigFloatRef"
-          :player-ref="playerRef"
-          :current-task="currentTask" />
+          <!-- 采空区瓦斯泄漏配置面板 -->
+          <GoafGasConfigFloat
+            v-if="isGoafTask(currentTask)"
+            ref="goafGasConfigFloatRef"
+            :player-ref="playerRef"
+            :current-task="currentTask" />
+        </div>
       </div>
 
       <!-- 左侧折叠触发 -->
