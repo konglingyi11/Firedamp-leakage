@@ -4,6 +4,10 @@ import { useRouter } from 'vue-router'
 import modelApi, { unwrapApiModel } from '../api/model.js'
 import taskApi from '../api/task.js'
 import {
+  createMockGoafTask,
+  createMockGoafModelInfo,
+} from '../api/mockGoafTask.js'
+import {
   Box,
   Check,
   Grid,
@@ -162,6 +166,20 @@ const fetchModels = async () => {
       updatedAt: item.updated_at,
       is_analyzed: item.is_analyzed,
     }))
+
+    // 追加本地「采空区瓦斯泄漏模拟数据」卡片
+    models.value.push({
+      id: createMockGoafModelInfo().id,
+      name: '采空区瓦斯泄漏模拟数据',
+      category: '采空区',
+      survivalSpace: '-',
+      difficulty: '本地模拟，无需后端',
+      image: '/model-preview-1.png',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      is_analyzed: true,
+      isSimulated: true,
+    })
   } catch (error) {
     console.error('Failed to fetch models:', error)
   } finally {
@@ -188,7 +206,9 @@ const createTask = () => {
     return
   }
 
-  const defaultName = '会议室'
+  const selected = models.value.find((m) => m.id === selectedModel.value)
+  const isSimulated = selected?.isSimulated === true
+  const defaultName = isSimulated ? '采空区瓦斯泄漏模拟' : '会议室'
 
   ElMessageBox.prompt('请输入任务名称', '创建任务', {
     confirmButtonText: '确定',
@@ -202,6 +222,17 @@ const createTask = () => {
   })
     .then(async ({ value }) => {
       try {
+        // 本地模拟卡片：不调用后端，直接构造合成任务
+        if (isSimulated) {
+          const syntheticTask = {
+            ...createMockGoafTask({ name: value, isSimulated: true }),
+            ...createMockGoafModelInfo(),
+            isSimulated: true,
+          }
+          emit('taskCreated', syntheticTask)
+          return
+        }
+
         const payload = {
           name: value,
           model_id: selectedModel.value,
@@ -524,6 +555,7 @@ const isSelected = (id) => {
         :class="{
           selected: isSelected(model.id),
           'model-card--guide-first': index === 0,
+          'model-card--simulated': model.isSimulated,
         }"
         shadow="hover"
         @click="selectModel(model)">
@@ -547,24 +579,26 @@ const isSelected = (id) => {
                 title="预览模型">
                 <el-icon><View /></el-icon>
               </el-button>
-              <el-button
-                link
-                type="primary"
-                @click.stop="openEditDialog(model)"
-                class="edit-btn"
-                title="编辑信息">
-                <el-icon><Edit /></el-icon>
-              </el-button>
-              <el-button
-                link
-                type="danger"
-                :loading="deletingModelId === model.id"
-                :disabled="deletingModelId !== null"
-                @click.stop="handleDeleteModel(model)"
-                class="delete-btn"
-                title="删除模型">
-                <el-icon><Delete /></el-icon>
-              </el-button>
+              <template v-if="!model.isSimulated">
+                <el-button
+                  link
+                  type="primary"
+                  @click.stop="openEditDialog(model)"
+                  class="edit-btn"
+                  title="编辑信息">
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+                <el-button
+                  link
+                  type="danger"
+                  :loading="deletingModelId === model.id"
+                  :disabled="deletingModelId !== null"
+                  @click.stop="handleDeleteModel(model)"
+                  class="delete-btn"
+                  title="删除模型">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </template>
               <el-tag
                 v-if="selectedModel === model.id"
                 type="success"

@@ -3,6 +3,11 @@ import {
   convertMultiTimeStepToPng,
   convertTimeStepResultsToPng,
 } from '@/utils/multiTimeStepConverter'
+import {
+  isGoafMockEnabled,
+  createMockGoafTimeSteps,
+  createMockGoafGeometryBounds,
+} from './mockGoafTask'
 
 const volumeDatasetCache = new Map()
 
@@ -128,6 +133,9 @@ export default {
    * @returns {Promise<Object>} - 包含时间步列表及物理时间列表 (time_steps, physical_times)
    */
   getTaskTimeSteps(taskId) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve(createMockGoafTimeSteps())
+    }
     return request.get(`/api/v1/post-processing/time-steps/${taskId}`)
   },
 
@@ -248,6 +256,14 @@ export default {
    * @returns {Promise<Object>} - 物理变量列表
    */
   getTaskVariables(taskId) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve([
+        'Temperature',
+        'Pressure',
+        'VelocityMagnitude',
+        'Mass_fraction_of_ch4',
+      ])
+    }
     return request.get(`/api/v1/tasks/${taskId}/variables`)
   },
 
@@ -692,6 +708,9 @@ export default {
    * @returns {Promise<Object>} - 几何边界信息
    */
   getGeometryBounds(taskId) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve(createMockGoafGeometryBounds())
+    }
     return request.get(
       '/api/v1/post-processing/geometry-bounds?task_id=' + taskId,
     )

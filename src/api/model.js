@@ -1,4 +1,9 @@
 import { request } from '@/utils/request'
+import {
+  isGoafMockEnabled,
+  MOCK_GOAF_MODEL_ID,
+  createMockGoafModelInfo,
+} from './mockGoafTask'
 
 /** 解包 getModelInfo 等接口返回（兼容 { code, data } 与 Vue Ref） */
 export function unwrapApiModel(payload) {
@@ -129,6 +134,9 @@ export const modelApi = {
    * @returns {Promise<string>} result.updated_at - 更新时间
    */
   getModelInfo(modelId) {
+    if (isGoafMockEnabled() && modelId === MOCK_GOAF_MODEL_ID) {
+      return Promise.resolve(createMockGoafModelInfo())
+    }
     return request.get(`/api/v1/models/${modelId}`)
   },
 

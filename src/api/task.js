@@ -1,4 +1,9 @@
 import { request } from '@/utils/request'
+import {
+  isGoafMockEnabled,
+  createMockGoafTask,
+  createMockGoafMetadata,
+} from './mockGoafTask'
 
 /**
  * 任务管理 API
@@ -20,6 +25,14 @@ export const taskApi = {
    * @returns {Promise<number>} result.page_size - 每页数量
    */
   getTasks(params) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve({
+        items: [createMockGoafTask()],
+        total: 1,
+        page: params?.page ?? 1,
+        page_size: params?.page_size ?? 10,
+      })
+    }
     return request.get('/api/v1/tasks/', params)
   },
 
@@ -128,6 +141,17 @@ export const taskApi = {
    * @returns {Promise<string>} result.message - 状态消息
    */
   getTaskProgress(taskId) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve({
+        status: 'completed',
+        progress: 100,
+        current_time_step: 10,
+        total_time_steps: 10,
+        elapsed_time: 0,
+        estimated_remaining_time: 0,
+        message: '模拟任务已完成',
+      })
+    }
     return request.get(`/api/v1/tasks/${taskId}/progress`)
   },
 
@@ -137,6 +161,15 @@ export const taskApi = {
    * @returns {Promise<Object>} 进度信息
    */
   getTaskPregenProgress(taskId) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve({
+        total: 0,
+        completed: 0,
+        failed: 0,
+        progress: 100,
+        status: 'completed',
+      })
+    }
     return request.get(`/api/v1/pregen/tasks/${taskId}/progress`)
   },
 
@@ -168,6 +201,9 @@ export const taskApi = {
    * @returns {Promise<string>} result.completed_at - 完成时间
    */
   getTaskDetail(taskId) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve(createMockGoafTask({ id: taskId }))
+    }
     return request.get(`/api/v1/tasks/${taskId}`)
   },
 
@@ -183,6 +219,9 @@ export const taskApi = {
    * @returns {Promise<Array<Object>>} result.boundary_conditions - 边界条件列表
    */
   getTaskMetadata(taskId) {
+    if (isGoafMockEnabled()) {
+      return Promise.resolve(createMockGoafMetadata())
+    }
     return request.get(`/api/v1/tasks/${taskId}/metadata`)
   },
 

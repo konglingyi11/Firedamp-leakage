@@ -64,6 +64,35 @@
   box-shadow: 0 0.5rem 1.5rem rgba(0, 243, 255, 0.3);
 }
 
+.model-card--simulated {
+  border-color: rgba(255, 165, 0, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 165, 0, 0.08) 0%,
+    rgba(255, 140, 0, 0.04) 100%
+  );
+}
+
+.model-card--simulated:hover {
+  border-color: rgba(255, 165, 0, 0.55);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 165, 0, 0.12) 0%,
+    rgba(255, 140, 0, 0.06) 100%
+  );
+  box-shadow: 0 0.5rem 1.5rem rgba(255, 165, 0, 0.25);
+}
+
+.model-card--simulated.selected {
+  border-color: rgba(255, 165, 0, 0.7);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 165, 0, 0.16) 0%,
+    rgba(255, 140, 0, 0.08) 100%
+  );
+  box-shadow: 0 0.5rem 1.5rem rgba(255, 165, 0, 0.35);
+}
+
 .model-card :deep(.el-card__header) {
   background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);

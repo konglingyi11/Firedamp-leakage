@@ -681,6 +681,24 @@ defineExpose({
               (goafGasParams.smokeSpeed ?? 0.25).toFixed(2)
             }}</span>
           </label>
+          <label class="goaf-gas-row">
+            <span>烟雾不透明度</span>
+            <input
+              type="range"
+              min="0.1"
+              max="1.0"
+              step="0.05"
+              :value="goafGasParams.smokeOpacity ?? 1.0"
+              @input="
+                updateGoafGasParam(
+                  'smokeOpacity',
+                  Number($event.target.value),
+                )
+              " />
+            <span class="goaf-gas-value">{{
+              (goafGasParams.smokeOpacity ?? 1.0).toFixed(2)
+            }}</span>
+          </label>
 
           <div class="goaf-gas-section-title" style="margin-top: 0.5rem">效果开关</div>
           <label class="goaf-gas-row">

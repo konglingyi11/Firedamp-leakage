@@ -2115,6 +2115,31 @@ const handleTaskCreated = async (task) => {
   if (prevId != null && nextId != null && prevId !== nextId) {
     emitResetLevelToUE()
   }
+
+  // 本地模拟任务（如采空区瓦斯泄漏模拟卡片）：直接接管，不调用后端
+  if (task?.isSimulated) {
+    const syntheticTask = {
+      ...task,
+      geometry_model_url: '/采空区/场景.glb',
+      real_model_url: '/采空区/场景.glb',
+    }
+    setCurrentTask(syntheticTask)
+
+    // 新建任务后清空旧任务的时间轴数据，避免时间轴残留
+    timelineTimeSteps.value = []
+    timelinePhysicalTimes.value = []
+    timelineTotalSteps.value = 0
+    previewFrameCount.value = 0
+    postProcessingTimeStepsTaskId.value = null
+    hasAppliedSettings.value = false
+    handleTimelineStop()
+
+    setTimeout(() => {
+      activeModule.value = 'parameters'
+    }, 500)
+    return
+  }
+
   let taskDetail = task
   if (nextId) {
     try {
