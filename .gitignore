@@ -24,6 +24,9 @@ dist/*
 .claude/
 .codebuddy/
 .kiro/
+.codex/
+.trae/
+.vscode
 .omc/
 .sisyphus/
 .superpowers/
