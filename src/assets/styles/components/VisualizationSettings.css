@@ -1,0 +1,962 @@
+.visualization-settings {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.settings-card {
+  background: rgba(13, 20, 35, 0.85);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+
+.radar-card {
+  flex-shrink: 0;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.header-title :deep(.el-icon) {
+  color: var(--primary-color);
+  font-size: var(--text-panel-title);
+  flex-shrink: 0;
+}
+
+.header-title h3 {
+  margin: 0;
+  font-size: var(--text-card-title);
+  font-weight: 600;
+  color: var(--primary-light);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-actions :deep(.el-button) {
+  height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  background: rgba(0, 243, 255, 0.1);
+  color: var(--text-secondary);
+  font-size: var(--text-body);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.header-actions :deep(.el-button:hover) {
+  border-color: var(--primary-color);
+  background: rgba(0, 243, 255, 0.2);
+  color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+}
+
+.header-actions .gas-config-dialog-btn {
+  flex-shrink: 0;
+  margin-left: 0.125rem;
+  border: 1px solid rgba(0, 243, 255, 0.35) !important;
+  background: rgba(0, 243, 255, 0.1) !important;
+  color: var(--text-secondary) !important;
+}
+
+.header-actions .gas-config-dialog-btn:hover {
+  border-color: var(--primary-color) !important;
+  background: rgba(0, 243, 255, 0.22) !important;
+  color: var(--primary-color) !important;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.25);
+}
+
+.gas-list {
+  padding: 0.5rem 1rem 1rem;
+  /* max-height: 50vh; */
+  overflow-y: auto;
+}
+
+.variable-subsection--radar {
+  padding: 0 0 0.5rem;
+}
+
+.radar-frequency-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0 1rem 1rem;
+}
+
+.radar-checkbox-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 0 !important;
+  height: auto !important;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 243, 255, 0.18);
+  background: rgba(6, 14, 26, 0.72);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.radar-checkbox-item :deep(.el-checkbox__input) {
+  margin-right: 0.65rem;
+  flex-shrink: 0;
+}
+
+.radar-checkbox-item :deep(.el-checkbox__label) {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0 !important;
+  line-height: 1.35;
+}
+
+.radar-checkbox-item:hover {
+  border-color: rgba(0, 243, 255, 0.3);
+  background: rgba(10, 20, 36, 0.88);
+}
+
+.radar-checkbox-item.is-checked {
+  border-color: rgba(0, 243, 255, 0.45);
+  background: linear-gradient(
+    95deg,
+    rgba(0, 243, 255, 0.12) 0%,
+    rgba(8, 18, 34, 0.78) 100%
+  );
+  box-shadow: inset 3px 0 0 var(--primary-color);
+}
+
+.loading-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.25rem;
+  margin: 0.5rem 1rem 1rem;
+  color: var(--text-tertiary);
+  font-size: var(--text-body);
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(0, 243, 255, 0.2);
+}
+
+.loading-container .el-icon {
+  font-size: var(--font-2xl);
+  color: var(--primary-color);
+}
+
+.empty-container {
+  color: var(--text-tertiary);
+}
+
+.gas-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* 云图气体行：不用 el-radio border，避免 Element Plus 默认浅色外框 */
+.gas-radio--cloud-cmap :deep(.el-radio__label) {
+  padding-left: 0;
+}
+
+.gas-radio--cloud-cmap.is-bordered {
+  border: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.gas-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* 体渲染多选：行间距略大，去掉带 border 时的浅色底 */
+.gas-checkbox-group--volume {
+  gap: 0.625rem;
+}
+
+.gas-checkbox--volume :deep(.el-checkbox__label) {
+  flex: 1;
+  min-width: 0;
+}
+
+/* .gas-checkbox--volume.is-bordered {
+  border: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  background: transparent !important;
+  box-shadow: none !important;
+} */
+
+.gas-checkbox--volume:hover {
+  border: none !important;
+}
+
+.radar-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.gas-radio {
+  width: 100%;
+  margin: 0 !important;
+  transition: all 0.3s ease;
+}
+
+.gas-checkbox {
+  width: 100%;
+  margin: 0 !important;
+  transition: all 0.3s ease;
+}
+
+.radar-radio,
+.radar-checkbox-item {
+  width: 100%;
+  margin: 0 !important;
+  transition: all 0.3s ease;
+}
+
+.gas-radio :deep(.el-radio__input) {
+  margin-right: 0.75rem;
+}
+
+.gas-checkbox :deep(.el-checkbox__input) {
+  margin-right: 0.75rem;
+}
+
+.radar-radio :deep(.el-radio__input) {
+  margin-right: 0;
+}
+
+.radar-checkbox-item :deep(.el-checkbox__inner) {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.radar-checkbox-item :deep(.el-checkbox__inner:hover) {
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.radar-checkbox-item :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0.625rem rgba(0, 212, 255, 0.4);
+}
+
+.radar-checkbox-item :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
+  border-color: #000;
+}
+
+/* 单选框样式统一 */
+.gas-radio :deep(.el-radio__inner) {
+  width: 1.1.5rem;
+  height: 1.1.5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.gas-radio :deep(.el-radio__inner:hover) {
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gas-radio :deep(.el-radio__input.is-checked .el-radio__inner) {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0.625rem rgba(0, 212, 255, 0.4);
+}
+
+.gas-radio :deep(.el-radio__input.is-checked .el-radio__inner::after) {
+  background-color: #000;
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+/* 雷达频率单选框样式 */
+.radar-radio :deep(.el-radio__inner) {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.radar-radio :deep(.el-radio__inner:hover) {
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.radar-radio :deep(.el-radio__input.is-checked .el-radio__inner) {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0.625rem rgba(0, 212, 255, 0.4);
+}
+
+.radar-radio :deep(.el-radio__input.is-checked .el-radio__inner::after) {
+  background-color: #000;
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+/* 复选框样式统一 */
+.gas-checkbox :deep(.el-checkbox__inner) {
+  width: 1.1.5rem;
+  height: 1.1.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.gas-checkbox :deep(.el-checkbox__inner:hover) {
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gas-checkbox :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0.625rem rgba(0, 212, 255, 0.4);
+}
+
+.gas-checkbox :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
+  border-color: #000;
+}
+
+/* 输入框/选择框样式统一 */
+:deep(.el-input__wrapper),
+:deep(.el-textarea__inner) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+  color: #ffffff !important;
+}
+
+:deep(.el-input__wrapper:hover),
+:deep(.el-textarea__inner:hover) {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+}
+
+:deep(.el-input__wrapper.is-focus),
+:deep(.el-textarea__inner:focus) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0 0 1px var(--primary-color) inset !important;
+}
+
+:deep(.el-input__inner) {
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+.gas-radio :deep(.el-radio__label) {
+  width: 100%;
+  padding: 0;
+}
+
+.gas-checkbox :deep(.el-checkbox__label) {
+  width: 100%;
+  padding: 0;
+}
+
+.radar-radio :deep(.el-radio__label) {
+  width: 100%;
+  padding: 0;
+}
+
+/* 遗留单选样式（其它面板若仍用 el-radio.radar-radio） */
+.radar-frequency-list .radar-radio.el-radio {
+  display: inline-flex;
+  align-items: flex-start;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0.05rem 0;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.radar-frequency-list .radar-radio :deep(.el-radio__input) {
+  padding-top: 0.48rem;
+}
+
+.radar-frequency-list .radar-radio :deep(.el-radio__label) {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0.65rem !important;
+  line-height: 1.45;
+}
+
+.gas-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* 遗留：单选模式下的内层卡片 */
+.radar-frequency-list .radar-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  min-height: 3.1rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 0.5rem;
+  background: rgba(6, 14, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+  position: relative;
+}
+
+/* 雷达颜色选择器 */
+.radar-color-picker-wrap {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.625rem;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.radar-color-input {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0.25rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.radar-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.radar-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.radar-frequency-list .radar-name {
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: rgba(245, 251, 255, 0.96);
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+}
+
+.radar-frequency-list .radar-hint {
+  font-size: var(--text-caption);
+  font-weight: 400;
+  color: rgba(186, 225, 242, 0.82);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+
+.variable-subsection {
+  margin-bottom: 0.75rem;
+}
+
+.variable-subsection:last-child {
+  margin-bottom: 0;
+}
+
+.variable-subsection--spaced {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 243, 255, 0.12);
+}
+
+.variable-subsection-title {
+  margin: 0 0 0.5rem 0.25rem;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: rgba(0, 243, 255, 0.82);
+  letter-spacing: 0.06em;
+}
+
+.gas-radio:hover .gas-label {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.gas-checkbox:hover .gas-label {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 体渲染行：统一深色卡片 + 青色描边，避免中间白块 */
+.gas-label--volume {
+  gap: 0.65rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    145deg,
+    rgba(14, 24, 44, 0.92) 0%,
+    rgba(8, 14, 28, 0.88) 100%
+  );
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0.125rem 0.5rem rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.gas-checkbox--volume:hover .gas-label--volume {
+  border-color: rgba(0, 243, 255, 0.3);
+  background: linear-gradient(
+    145deg,
+    rgba(18, 32, 52, 0.95) 0%,
+    rgba(10, 18, 36, 0.9) 100%
+  );
+}
+
+.gas-checkbox--volume
+  :deep(.el-checkbox__input.is-checked)
+  ~ .el-checkbox__label
+  .gas-label--volume {
+  border-color: rgba(0, 243, 255, 0.45);
+  background: linear-gradient(
+    145deg,
+    rgba(0, 243, 255, 0.12) 0%,
+    rgba(8, 20, 40, 0.92) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(0, 243, 255, 0.08),
+    0 0 0.75rem rgba(0, 243, 255, 0.15);
+}
+
+.gas-radio--cloud-cmap
+  :deep(.el-radio__input.is-checked)
+  ~ .el-radio__label
+  .gas-label--volume {
+  border-color: rgba(0, 243, 255, 0.45);
+  background: linear-gradient(
+    145deg,
+    rgba(0, 243, 255, 0.12) 0%,
+    rgba(8, 20, 40, 0.92) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(0, 243, 255, 0.08),
+    0 0 0.75rem rgba(0, 243, 255, 0.15);
+}
+
+.gas-radio--cloud-cmap:hover .gas-label--volume {
+  border-color: rgba(0, 243, 255, 0.3);
+  background: linear-gradient(
+    145deg,
+    rgba(18, 32, 52, 0.95) 0%,
+    rgba(10, 18, 36, 0.9) 100%
+  );
+}
+
+.radar-frequency-list .radar-radio:not(.is-checked):hover .radar-label {
+  background: rgba(10, 20, 36, 0.88);
+  border-color: rgba(0, 243, 255, 0.22);
+}
+
+.radar-frequency-list .radar-radio.is-checked .radar-label {
+  background: linear-gradient(
+    95deg,
+    rgba(0, 243, 255, 0.12) 0%,
+    rgba(8, 18, 34, 0.72) 42%,
+    rgba(7, 14, 28, 0.78) 100%
+  );
+  border-color: rgba(0, 243, 255, 0.42);
+  box-shadow:
+    inset 3px 0 0 var(--primary-color),
+    inset 0 1px 0 rgba(0, 243, 255, 0.06);
+}
+
+.gas-radio :deep(.el-radio__input.is-checked) ~ .el-radio__label .gas-label {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* 2D 云图多选若用 checkbox 时保留紫色调；体渲染用 .gas-label--volume 覆盖 */
+.gas-checkbox:not(.gas-checkbox--volume)
+  :deep(.el-checkbox__input.is-checked)
+  ~ .el-checkbox__label
+  .gas-label {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* 体渲染多选：色带下拉（暗色输入，禁止白底）
+ * 原先 flex:1 + min-width:10rem + flex-shrink:0 会在窄侧栏里占满行宽，
+ * 同排的气体名称（flex:1; min-width:0）被压成 0 宽度而「消失」。允许下拉区收缩，名称优先占剩余空间。 */
+.gas-cmap-wrap {
+  flex: 0 1 50%;
+  min-width: 0;
+  max-width: 14rem;
+}
+
+.gas-cmap-select {
+  width: 100%;
+  --gas-cmap-bg: rgba(6, 12, 24, 0.92);
+  --gas-cmap-border: rgba(0, 243, 255, 0.22);
+  --gas-cmap-text: rgba(226, 247, 255, 0.95);
+}
+
+.cmap-select-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.cmap-select-label-bar {
+  flex-shrink: 0;
+  width: 5.5rem;
+  height: 0.7rem;
+  border-radius: 0.1875rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.cmap-select-label-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: var(--gas-cmap-text);
+}
+
+.gas-cmap-select :deep(.el-select__placeholder) {
+  z-index: 0;
+}
+
+.gas-cmap-select :deep(.el-select__selection) {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Element Plus 2.13+：Select 使用 .el-select__wrapper，不再使用 .el-input__wrapper */
+.gas-cmap-select :deep(.el-select__wrapper) {
+  padding: 0 0.4rem 0 0.55rem !important;
+  min-height: 1.875rem !important;
+  background: var(--gas-cmap-bg) !important;
+  border-radius: 0.375rem !important;
+  box-shadow:
+    0 0 0 1px var(--gas-cmap-border) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0.0625rem 0.25rem rgba(0, 0, 0, 0.2) !important;
+  transition:
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.gas-cmap-select :deep(.el-select__wrapper.is-hovering:not(.is-focused)) {
+  box-shadow:
+    0 0 0 1px rgba(0, 243, 255, 0.4) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0.0625rem 0.25rem rgba(0, 0, 0, 0.2) !important;
+  background: rgba(10, 20, 38, 0.95) !important;
+}
+
+.gas-cmap-select :deep(.el-select__wrapper.is-focused) {
+  box-shadow:
+    0 0 0 1px rgba(0, 243, 255, 0.55) inset,
+    0 0 0 1px rgba(0, 243, 255, 0.25),
+    0 0 0.75rem rgba(0, 243, 255, 0.12) !important;
+}
+
+.gas-cmap-select :deep(.el-select__placeholder),
+.gas-cmap-select :deep(.el-select__placeholder span),
+.gas-cmap-select :deep(.el-select__tags-text),
+.gas-cmap-select :deep(.el-select__input) {
+  color: var(--gas-cmap-text) !important;
+  font-size: var(--text-caption) !important;
+  font-weight: 500 !important;
+}
+
+.gas-cmap-select :deep(.el-select__placeholder.is-transparent) {
+  color: rgba(226, 247, 255, 0.55) !important;
+}
+
+/* 旧版 Element Plus（仍使用 Input 包裹时） */
+.gas-cmap-select :deep(.el-input__wrapper) {
+  padding: 0 0.4rem 0 0.55rem !important;
+  min-height: 1.875rem !important;
+  background: var(--gas-cmap-bg) !important;
+  border: 1px solid var(--gas-cmap-border) !important;
+  border-radius: 0.375rem !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0.0625rem 0.25rem rgba(0, 0, 0, 0.2) !important;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.gas-cmap-select :deep(.el-input__wrapper:hover) {
+  border-color: rgba(0, 243, 255, 0.4) !important;
+  background: rgba(10, 20, 38, 0.95) !important;
+}
+
+.gas-cmap-select :deep(.el-input__wrapper.is-focus) {
+  border-color: rgba(0, 243, 255, 0.55) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 243, 255, 0.25),
+    0 0 0.75rem rgba(0, 243, 255, 0.12) !important;
+}
+
+.gas-cmap-select :deep(.el-input__inner) {
+  color: var(--gas-cmap-text) !important;
+  font-size: var(--text-caption) !important;
+  font-weight: 500 !important;
+}
+
+.gas-cmap-select :deep(.el-select__caret) {
+  color: rgba(0, 243, 255, 0.75) !important;
+}
+
+.gas-cmap-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.gas-cmap-option-label {
+  flex-shrink: 0;
+  font-size: var(--text-caption);
+}
+
+.gas-cmap-option-gradient {
+  flex: 1;
+  min-width: 3.5rem;
+  height: 0.875rem;
+  border-radius: 0.1875rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* 每项气体颜色选择器（原生 color input，保证可点击） */
+.gas-color-picker-wrap {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.625rem;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.gas-color-input {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0.25rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gas-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.gas-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.gas-name {
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.2px;
+  flex: 1;
+}
+
+.gas-label--volume .gas-name {
+  color: rgba(232, 248, 255, 0.92);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.35);
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 自定义 divider 样式 */
+:deep(.el-divider) {
+  border-color: rgba(255, 255, 255, 0.06);
+  margin: 0.5rem 1rem !important;
+}
+
+/* 颜色设置弹窗样式 - 需要在全局作用域，因为使用了 append-to-body */
+.color-settings-dialog {
+  background: rgba(13, 20, 35, 0.95) !important;
+  backdrop-filter: blur(1.25rem);
+  border: 1px solid var(--primary-color) !important;
+}
+
+.color-settings-dialog .el-dialog__title {
+  color: #fff;
+}
+
+.color-settings-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: #fff;
+}
+
+.color-settings-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.color-setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.color-setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-gas-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--text-body);
+}
+
+/* 全局覆盖 Select 下拉菜单样式 */
+.el-popper.is-light {
+  background: rgba(13, 20, 35, 0.95) !important;
+  border: 1px solid var(--primary-color) !important;
+}
+
+.el-popper.is-light .el-popper__arrow::before {
+  background: rgba(13, 20, 35, 0.95) !important;
+  border: 1px solid var(--primary-color) !important;
+}
+
+.el-select-dropdown__item {
+  color: var(--text-secondary) !important;
+}
+
+.el-select-dropdown__item.hover,
+.el-select-dropdown__item:hover {
+  background-color: rgba(0, 243, 255, 0.1) !important;
+  color: var(--primary-color) !important;
+}
+
+.el-select-dropdown__item.is-selected {
+  color: var(--primary-color) !important;
+  font-weight: 600 !important;
+  background-color: transparent !important;
+}
+
+.el-select-dropdown__item.is-selected::after {
+  content: '';
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  box-shadow: 0 0 0.5rem var(--primary-color);
+}
+
+/* 体渲染色带下拉：专用暗色面板（teleport 到 body，需全局） */
+.gas-cmap-select-popper.el-popper,
+.gas-cmap-select-popper {
+  background: rgba(10, 18, 34, 0.98) !important;
+  border: 1px solid rgba(0, 243, 255, 0.28) !important;
+  backdrop-filter: blur(0.75rem);
+  box-shadow:
+    0 0.25rem 1rem rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 243, 255, 0.06) inset !important;
+}
+
+.gas-cmap-select-popper .el-select-dropdown__list {
+  padding: 0.35rem 0;
+}
+
+.gas-cmap-select-popper .el-select-dropdown__item {
+  color: rgba(230, 245, 255, 0.92) !important;
+  background: transparent !important;
+  padding: 0.5rem 0.75rem !important;
+  min-height: 2.25rem;
+}
+
+.gas-cmap-select-popper .el-select-dropdown__item.hover,
+.gas-cmap-select-popper .el-select-dropdown__item:hover {
+  background: rgba(0, 243, 255, 0.14) !important;
+  color: #e8fcff !important;
+}
+
+.gas-cmap-select-popper .el-select-dropdown__item.is-selected {
+  color: #7ef3ff !important;
+  font-weight: 600 !important;
+  background: rgba(0, 243, 255, 0.07) !important;
+}
+
+.gas-cmap-select-popper .el-popper__arrow::before {
+  background: rgba(10, 18, 34, 0.98) !important;
+  border: 1px solid rgba(0, 243, 255, 0.28) !important;
+}

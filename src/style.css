@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+  font-family: var(--font-family-base);
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  font-size: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+  overflow: hidden;
+  background-color: #000;
+  position: relative;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 动态星空背景 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(1px 1px at 10% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 20% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 30% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 40%, #fff, transparent),
+    radial-gradient(2px 2px at 50% 50%, #fff, transparent),
+    radial-gradient(1px 1px at 60% 60%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 70%, #fff, transparent),
+    radial-gradient(1px 1px at 80% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 90% 90%, #fff, transparent);
+  background-size: 55vmin 55vmin;
+  opacity: 0.1;
+  z-index: 0;
+  animation: stars 100s linear infinite;
+}
+
+/* 网格背景 */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+  background-size: 4vmin 4vmin;
+  transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+  transform-origin: top center;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 0;
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes stars {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-550px); }
+}
+
+@keyframes gridMove {
+  0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+  100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); }
+}
+
+#app {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* 全局文字选择 */
+::selection {
+  background-color: rgba(0, 243, 255, 0.3);
+  color: #ffffff;
+  text-shadow: 0 0 5px #00f3ff;
+}
+
+/* 禁用文字选择的元素 */
+button,
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 全局 Tag 样式优化 */
+.el-tag {
+  background-color: transparent !important;
+  border-width: 1px !important;
+  font-family: var(--font-family-mono);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.el-tag .el-tag__content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Success (Completed/Selected) */
+.el-tag--success {
+  border-color: rgba(65, 184, 131, 0.5) !important;
+  color: #41b883 !important;
+  background-color: rgba(65, 184, 131, 0.1) !important;
+}
+
+/* Primary (Running) */
+.el-tag--primary {
+  border-color: rgba(0, 243, 255, 0.5) !important;
+  color: #00f3ff !important;
+  background-color: rgba(0, 243, 255, 0.1) !important;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+
+/* Danger (Failed) */
+.el-tag--danger {
+  border-color: rgba(255, 71, 87, 0.5) !important;
+  color: #ff4757 !important;
+  background-color: rgba(255, 71, 87, 0.1) !important;
+}
+
+/* Warning (Stopped) */
+.el-tag--warning {
+  border-color: rgba(255, 165, 2, 0.5) !important;
+  color: #ffa502 !important;
+  background-color: rgba(255, 165, 2, 0.1) !important;
+}
+
+/* Info (Created/Pending/Normal) */
+.el-tag--info {
+  border-color: rgba(164, 176, 190, 0.5) !important;
+  color: #a4b0be !important;
+  background-color: rgba(164, 176, 190, 0.1) !important;
+}
+
+/* 统一分页按钮样式，匹配任务列表分页 */
+.pagination-container {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pagination-container .el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-text-color: var(--text-secondary);
+  --el-pagination-button-color: var(--text-secondary);
+  --el-pagination-button-bg-color: rgba(255, 255, 255, 0.05);
+  --el-pagination-button-disabled-bg-color: transparent;
+  --el-pagination-hover-color: var(--primary-color);
+}
+
+.pagination-container .el-pagination.is-background .el-pager li:not(.is-disabled).is-active {
+  background-color: var(--primary-color);
+  color: #000;
+  font-weight: bold;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+}
+
+.pagination-container .el-pagination.is-background .el-pager li {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  min-width: 2rem;
+  border-radius: 0.25rem;
+  margin: 0 0.125rem;
+  font-family: var(--font-family-mono);
+  transition: all 0.3s;
+}
+
+.pagination-container .el-pagination.is-background .el-pager li:not(.is-disabled):hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background-color: rgba(0, 243, 255, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 243, 255, 0.2);
+}
+
+.pagination-container .el-pagination.is-background .btn-prev,
+.pagination-container .el-pagination.is-background .btn-next {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-radius: 0.25rem;
+  margin: 0 0.125rem;
+  transition: all 0.3s;
+}
+
+.pagination-container .el-pagination.is-background .btn-prev:disabled,
+.pagination-container .el-pagination.is-background .btn-next:disabled {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.pagination-container .el-pagination.is-background .btn-prev:not(:disabled):hover,
+.pagination-container .el-pagination.is-background .btn-next:not(:disabled):hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background-color: rgba(0, 243, 255, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 243, 255, 0.2);
+}
+
+/* 全局滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

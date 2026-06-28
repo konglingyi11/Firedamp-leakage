@@ -1,0 +1,12 @@
+[mcp_servers."API 文档"]
+command = "cmd"
+args = [
+    "/c",
+    "npx",
+    "-y",
+    "apifox-mcp-server@latest",
+    "7669264",
+]
+
+[mcp_servers."API 文档".env]
+APIFOX_ACCESS_TOKEN = "APS-jPGAdMcN0LG4moNjEWJt0vArbvC9EznT"

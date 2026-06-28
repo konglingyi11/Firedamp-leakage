@@ -1,0 +1,201 @@
+/* ModelGrid 弹窗样式（非 scoped）— append-to-body 弹窗无法被 scoped CSS 匹配 */
+
+.edit-dialog {
+  background: rgba(13, 20, 35, 0.95) !important;
+  backdrop-filter: blur(1.25rem);
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 3.125rem rgba(0, 0, 0, 0.8);
+  --el-dialog-bg-color: transparent !important;
+}
+.edit-dialog .el-dialog__header {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 243, 255, 0.1) 0%,
+    transparent 100%
+  ) !important;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  margin-right: 0 !important;
+  padding: 1rem 1.25rem !important;
+}
+.edit-dialog .el-dialog__title {
+  color: var(--primary-light);
+  font-family: var(--font-family-tech);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.edit-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: var(--text-secondary);
+}
+.edit-dialog .el-dialog__headerbtn:hover .el-dialog__close {
+  color: var(--primary-color);
+}
+.edit-dialog .el-dialog__body {
+  padding: 1.25rem 1.5rem !important;
+  color: #fff !important;
+  background: transparent !important;
+}
+.edit-dialog .el-dialog__footer {
+  border-top: 1px solid rgba(0, 243, 255, 0.2);
+  padding: 1rem 1.25rem !important;
+  background: transparent !important;
+}
+.edit-dialog .el-button {
+  font-family: var(--font-family-tech);
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+}
+.edit-dialog .el-button--primary {
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--accent-secondary)
+  );
+  border: none;
+  box-shadow: 0 0 0.9375rem rgba(0, 243, 255, 0.3);
+  color: #000;
+  font-weight: 600;
+}
+.edit-dialog .el-button--primary:hover {
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+  transform: translateY(-1px);
+}
+.edit-dialog .el-button:not(.el-button--primary) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+.edit-dialog .el-button:not(.el-button--primary):hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: rgba(0, 243, 255, 0.05);
+}
+.edit-dialog .el-input,
+.edit-dialog .el-textarea {
+  --el-input-bg-color: rgba(26, 35, 50, 0.8);
+  --el-input-text-color: #ffffff;
+  --el-input-border-color: rgba(0, 243, 255, 0.3);
+  --el-input-hover-border-color: rgba(0, 243, 255, 0.5);
+  --el-input-focus-border-color: var(--primary-color);
+  --el-fill-color-blank: transparent;
+}
+.edit-dialog .el-input__wrapper,
+.edit-dialog .el-textarea__inner {
+  background-color: var(--el-input-bg-color) !important;
+  box-shadow: 0 0 0 1px var(--el-input-border-color) inset !important;
+  border-radius: 4px !important;
+}
+.edit-dialog .el-input__wrapper:hover,
+.edit-dialog .el-textarea__inner:hover {
+  background-color: rgba(26, 35, 50, 0.9) !important;
+  box-shadow: 0 0 0 1px var(--el-input-hover-border-color) inset !important;
+}
+.edit-dialog .el-input__wrapper.is-focus,
+.edit-dialog .el-textarea__inner:focus {
+  background-color: rgba(26, 35, 50, 0.95) !important;
+  box-shadow: 0 0 0 1px var(--el-input-focus-border-color) inset !important;
+}
+.edit-dialog .el-input__inner {
+  color: var(--el-input-text-color) !important;
+  font-weight: 500;
+}
+.edit-dialog .el-form-item__label {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+}
+.edit-dialog .glb-upload {
+  width: 100%;
+}
+.edit-dialog .glb-upload .el-upload {
+  width: auto;
+}
+.edit-dialog .glb-upload .el-upload__tip {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
+.edit-dialog .glb-upload .el-upload-list__item {
+  background: rgba(26, 35, 50, 0.8);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+}
+.edit-dialog .preview-image-upload-wrap {
+  width: 100%;
+}
+.edit-dialog .edit-current-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(26, 35, 50, 0.6);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  border-radius: 4px;
+}
+.edit-dialog .edit-current-preview-image {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.edit-dialog .edit-current-preview-label {
+  color: var(--text-secondary);
+  font-size: var(--text-caption, 0.75rem);
+}
+.edit-dialog .preview-image-upload .el-upload-list__item {
+  width: 5rem;
+  height: 5rem;
+  padding: 0;
+  overflow: hidden;
+}
+.edit-dialog .preview-image-upload .el-upload-list__item-thumbnail {
+  object-fit: cover;
+}
+.detail-dialog {
+  background: rgba(13, 20, 35, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.8),
+    0 0 100px rgba(0, 243, 255, 0.2);
+  --el-dialog-bg-color: transparent !important;
+}
+.detail-dialog .el-dialog__header {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 243, 255, 0.15) 0%,
+    rgba(0, 183, 205, 0.08) 50%,
+    transparent 100%
+  ) !important;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+  margin-right: 0 !important;
+  padding: 1.25rem 1.5rem !important;
+}
+.detail-dialog .el-dialog__title {
+  color: var(--primary-light);
+  font-family: var(--font-family-tech);
+  font-weight: 700;
+  font-size: var(--text-panel-title);
+  letter-spacing: 1.5px;
+}
+.detail-dialog .el-dialog__body {
+  padding: 1.5rem !important;
+  color: #fff !important;
+  background: transparent !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+}
+.detail-dialog .el-dialog__body::-webkit-scrollbar {
+  width: 8px;
+}
+.detail-dialog .el-dialog__body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+.detail-dialog .el-dialog__body::-webkit-scrollbar-thumb {
+  background: rgba(0, 243, 255, 0.3);
+  border-radius: 4px;
+}
+.detail-dialog .el-dialog__body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 243, 255, 0.5);
+}

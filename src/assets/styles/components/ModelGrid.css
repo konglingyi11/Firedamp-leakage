@@ -1,0 +1,691 @@
+.model-grid-container {
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  overflow-y: auto;
+  animation: fadeIn 0.5s ease-out;
+  position: relative;
+}
+
+.grid-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.grid-header h2 {
+  font-size: var(--font-2xl);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.grid-header p {
+  font-size: var(--text-body);
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 5rem;
+}
+
+.model-card {
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+.model-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 243, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 243, 255, 0.2);
+}
+
+.model-card.selected {
+  border-color: rgba(0, 243, 255, 0.5);
+  background: rgba(0, 243, 255, 0.1);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 243, 255, 0.3);
+}
+
+.model-card :deep(.el-card__header) {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem 1.25rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.model-name {
+  font-weight: 600;
+  font-size: var(--text-card-title);
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.3px;
+}
+
+.model-preview {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  padding: 0;
+}
+
+.preview-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 243, 255, 0.15) 0%,
+    rgba(0, 183, 205, 0.1) 100%
+  );
+  border: 2px solid rgba(0, 243, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.preview-overlay .el-icon {
+  font-size: var(--font-2xl);
+  color: #fff;
+  transform: scale(0.8);
+  transition: transform 0.3s ease;
+}
+
+.preview-circle:hover .preview-overlay {
+  opacity: 1;
+}
+
+.preview-circle:hover .preview-overlay .el-icon {
+  transform: scale(1);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.model-card:hover .preview-circle {
+  border-color: rgba(0, 243, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.model-card.selected .preview-circle {
+  border-color: rgba(0, 243, 255, 0.7);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 243, 255, 0.25) 0%,
+    rgba(0, 183, 205, 0.15) 100%
+  );
+}
+
+.preview-icon {
+  font-size: var(--text-hero-title);
+  color: rgba(0, 243, 255, 0.9);
+  z-index: 1;
+  transition: all 0.25s ease;
+}
+
+.model-card:hover .preview-icon {
+  transform: scale(1.1);
+}
+
+.model-info {
+  margin-top: 0.75rem;
+  padding: 0 1rem 0.75rem;
+}
+
+.model-info :deep(.el-descriptions__label) {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  font-size: var(--text-caption);
+}
+
+.model-info :deep(.el-descriptions__content) {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--text-caption);
+}
+
+.model-info :deep(.el-descriptions__body) {
+  background: transparent;
+}
+
+.model-info :deep(.el-descriptions__table) {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.model-info :deep(.el-descriptions__cell) {
+  border-color: rgba(255, 255, 255, 0.06);
+  padding: 0.5rem 0.625rem;
+}
+
+.info-text {
+  font-size: var(--text-caption);
+  color: rgba(255, 255, 255, 0.7);
+  line-height: var(--leading-normal);
+}
+
+.create-task-btn-container {
+  position: fixed;
+  bottom: 2.5rem;
+  right: 2.5rem;
+  z-index: 2000;
+  pointer-events: auto;
+}
+
+.create-task-btn {
+  height: 3.125rem;
+  padding: 0 2.5rem;
+  font-family: var(--font-family-tech);
+  letter-spacing: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--accent-secondary)
+  );
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 0 1.25rem rgba(0, 243, 255, 0.4);
+  transition: all 0.3s;
+  clip-path: polygon(
+    0.625rem 0,
+    100% 0,
+    100% calc(100% - 0.625rem),
+    calc(100% - 0.625rem) 100%,
+    0 100%,
+    0 0.625rem
+  );
+}
+
+.create-task-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 243, 255, 0.6);
+}
+
+.create-task-btn :deep(.el-icon) {
+  font-size: var(--text-panel-title);
+  transition: transform 0.3s;
+}
+
+.create-task-btn:hover :deep(.el-icon) {
+  transform: translateX(5px);
+}
+
+/* 弹窗输入框样式优化 */
+:deep(.edit-dialog .el-input__wrapper),
+:deep(.edit-dialog .el-textarea__inner) {
+  background-color: rgba(26, 35, 50, 0.8) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.3) inset !important;
+  color: #ffffff !important;
+  border-radius: 4px;
+}
+
+:deep(.edit-dialog .el-input__wrapper:hover),
+:deep(.edit-dialog .el-textarea__inner:hover) {
+  background-color: rgba(26, 35, 50, 0.9) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.5) inset !important;
+}
+
+:deep(.edit-dialog .el-input__wrapper.is-focus),
+:deep(.edit-dialog .el-textarea__inner:focus) {
+  background-color: rgba(26, 35, 50, 0.95) !important;
+  box-shadow: 0 0 0 1px var(--primary-color) inset !important;
+}
+
+:deep(.edit-dialog .el-input__inner) {
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+:deep(.edit-dialog .el-form-item__label) {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 1400px) {
+  .model-grid {
+    grid-template-columns: repeat(auto-fit, minmax(18.75rem, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .model-grid-container {
+    padding: 1.5rem;
+  }
+
+  .model-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .grid-header {
+    margin-bottom: 2rem;
+  }
+
+  .grid-header h2 {
+    font-size: var(--font-2xl);
+  }
+
+  .grid-header p {
+    font-size: var(--text-body);
+  }
+
+  .preview-circle {
+    width: 6.25rem;
+    height: 6.25rem;
+  }
+
+  .preview-icon {
+    font-size: 4.5rem;
+  }
+
+  .model-name {
+    font-size: var(--text-card-title);
+  }
+
+  .create-task-btn-container {
+    bottom: 1.25rem;
+    right: 1.25rem;
+  }
+}
+
+/* 全局弹窗样式 - 复用 TaskList 中的样式 */
+
+
+
+
+
+
+
+/* 按钮样式复用 */
+
+
+
+
+
+/* 弹窗输入框样式优化 - 全局 */
+
+
+
+
+
+
+/* 创建任务弹窗样式 */
+.create-task-dialog {
+  background: rgba(13, 20, 35, 0.95) !important;
+  backdrop-filter: blur(1.25rem);
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 3.125rem rgba(0, 0, 0, 0.8);
+  --el-messagebox-content-color: var(--text-primary);
+  --el-bg-color: transparent;
+  padding-bottom: 1.25rem !important;
+}
+
+.create-task-dialog .el-message-box__header {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 243, 255, 0.1) 0%,
+    transparent 100%
+  ) !important;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  padding: 1rem 1.25rem !important;
+  margin-right: 0 !important;
+}
+
+.create-task-dialog .el-message-box__title {
+  color: var(--primary-light);
+  font-family: var(--font-family-tech);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.create-task-dialog .el-message-box__headerbtn .el-message-box__close {
+  color: var(--text-secondary);
+}
+
+.create-task-dialog .el-message-box__headerbtn:hover .el-message-box__close {
+  color: var(--primary-color);
+}
+
+.create-task-dialog .el-message-box__content {
+  color: var(--text-primary) !important;
+  padding: 1.5rem 1.25rem 0.625rem !important;
+}
+
+/* 输入框样式 */
+.create-task-dialog .el-input {
+  --el-input-bg-color: rgba(255, 255, 255, 0.05);
+  --el-input-text-color: #ffffff;
+  --el-input-border-color: rgba(255, 255, 255, 0.1);
+  --el-input-hover-border-color: rgba(255, 255, 255, 0.3);
+  --el-input-focus-border-color: var(--primary-color);
+}
+
+.create-task-dialog .el-input__wrapper {
+  background-color: var(--el-input-bg-color) !important;
+  box-shadow: 0 0 0 1px var(--el-input-border-color) inset !important;
+}
+
+.create-task-dialog .el-input__wrapper:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 1px var(--el-input-hover-border-color) inset !important;
+}
+
+.create-task-dialog .el-input__wrapper.is-focus {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0 0 1px var(--el-input-focus-border-color) inset !important;
+}
+
+.create-task-dialog .el-input__inner {
+  color: var(--el-input-text-color) !important;
+  font-weight: 500;
+}
+
+/* 按钮样式 */
+.create-task-dialog .el-message-box__btns {
+  padding: 0.625rem 1.25rem 0 !important;
+}
+
+.create-task-dialog .el-button {
+  font-family: var(--font-family-tech);
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+}
+
+.create-task-dialog .el-button--primary {
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--accent-secondary)
+  );
+  border: none;
+  box-shadow: 0 0 0.9375rem rgba(0, 243, 255, 0.3);
+  color: #000;
+  font-weight: 600;
+  --el-button-hover-bg-color: transparent;
+  --el-button-hover-border-color: transparent;
+}
+
+.create-task-dialog .el-button--primary:hover {
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+  transform: translateY(-1px);
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--accent-secondary)
+  );
+}
+
+.create-task-dialog .el-button:not(.el-button--primary) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  --el-button-hover-bg-color: rgba(0, 243, 255, 0.05);
+}
+
+.create-task-dialog .el-button:not(.el-button--primary):hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: rgba(0, 243, 255, 0.05);
+}
+
+/* 模型详情弹窗样式 */
+
+
+
+
+/* 自定义滚动条 */
+
+
+
+
+.detail-content {
+  display: block;
+}
+
+.detail-section {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section:hover {
+  border-color: rgba(0, 243, 255, 0.3);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: var(--text-card-title);
+  font-weight: 700;
+  color: var(--primary-light);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.section-title .el-icon {
+  color: var(--primary-color);
+  font-size: var(--font-xl);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 243, 255, 0.2);
+}
+
+.info-item .label {
+  font-size: var(--text-caption);
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item .value {
+  font-size: var(--text-body);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  line-height: var(--leading-normal);
+}
+
+.info-item .value.mono {
+  font-family: 'Courier New', monospace;
+  font-size: var(--text-body);
+  color: rgba(0, 243, 255, 0.9);
+}
+
+.info-item .value.highlight {
+  color: var(--primary-light);
+  font-weight: 700;
+}
+
+.species-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+
+.boundary-condition-item {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.boundary-condition-item:last-child {
+  margin-bottom: 0;
+}
+
+.bc-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.empty-detail {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--text-body);
+}
+
+.detail-btn {
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+  font-size: var(--text-panel-title);
+}
+
+.detail-btn:hover {
+  color: var(--primary-color);
+  transform: scale(1.15);
+}
+
+.preview-model-btn {
+  color: rgba(147, 255, 207, 0.72);
+  transition: all 0.3s ease;
+  font-size: var(--text-panel-title);
+}
+
+.preview-model-btn:hover {
+  color: #7dffd3;
+  transform: scale(1.15);
+}
+
+.analyze-btn {
+  padding: 4px 12px;
+  font-size: var(--text-caption);
+  border-color: rgba(0, 243, 255, 0.35);
+  color: var(--primary-color);
+  background: rgba(0, 243, 255, 0.06);
+  transition: all 0.25s;
+}
+
+.analyze-btn:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  background: rgba(0, 243, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+}
+
+.analyze-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-btn {
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+  font-size: var(--text-panel-title);
+}
+
+.edit-btn:hover {
+  color: var(--primary-color);
+  transform: scale(1.15);
+}
+
+.delete-btn {
+  color: rgba(255, 120, 120, 0.75);
+  transition: all 0.3s ease;
+  font-size: var(--text-panel-title);
+}
+
+.delete-btn:hover:not(:disabled) {
+  color: #ff5f5f;
+  transform: scale(1.15);
+}

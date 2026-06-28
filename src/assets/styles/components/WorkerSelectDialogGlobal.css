@@ -1,0 +1,50 @@
+/* WorkerSelectDialog 弹窗样式（非 scoped） */
+
+.worker-dialog {
+  --el-dialog-bg-color: rgba(13, 20, 35, 0.98) !important;
+}
+.worker-dialog .el-dialog {
+  background: rgba(13, 20, 35, 0.98) !important;
+  backdrop-filter: blur(1.25rem);
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  border-radius: 0.625rem;
+  overflow: hidden;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.worker-dialog .el-dialog__header {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 243, 255, 0.1) 0%,
+    transparent 100%
+  ) !important;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  margin-right: 0 !important;
+  padding: 1rem 1.25rem !important;
+}
+.worker-dialog .el-dialog__title {
+  color: var(--primary-light);
+  font-family: var(--font-family-tech);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.worker-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: var(--text-secondary);
+}
+.worker-dialog .el-dialog__headerbtn:hover .el-dialog__close {
+  color: var(--primary-color);
+}
+.worker-dialog .el-dialog__body {
+  padding: 0.5rem 0.75rem !important;
+  background: transparent !important;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+.worker-dialog .el-dialog__footer {
+  border-top: 1px solid rgba(0, 243, 255, 0.2);
+  padding: 0.875rem 1rem !important;
+  background: transparent !important;
+}

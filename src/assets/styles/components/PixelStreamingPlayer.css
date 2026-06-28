@@ -1,0 +1,145 @@
+.player-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.peer-video {
+  width: 100%;
+  height: 100%;
+  background: black;
+  display: block;
+  /* 移除焦点时的蓝色外边框 */
+  outline: none;
+  cursor: v-bind('isImmersiveMode && isLocked ? "none" : "default"');
+  transition: box-shadow 0.3s;
+}
+
+.peer-video:focus {
+  /* 聚焦时增加一个微妙的青色内阴影，提示用户键盘已生效 */
+  box-shadow: inset 0 0 1.25rem rgba(0, 243, 255, 0.2);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--primary-color);
+  font-family: var(--font-family-tech);
+  padding: 2rem 3rem;
+}
+
+.queue-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-family-tech);
+  pointer-events: none;
+}
+
+.queue-icon {
+  font-size: var(--text-panel-title);
+  color: var(--primary-color);
+}
+
+.queue-title {
+  font-size: var(--text-card-title);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.08em;
+}
+
+.queue-hint {
+  font-family: var(--font-family-mono);
+  font-size: var(--text-body);
+  color: var(--primary-color);
+}
+
+.queue-sub {
+  max-width: 22rem;
+  font-size: var(--text-caption);
+  line-height: var(--leading-normal);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.controls-overlay {
+  position: absolute;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 100;
+  display: flex;
+  gap: 0.625rem;
+  /* 按钮区域恢复鼠标显示，否则没法点击按钮 */
+  cursor: default;
+  background: rgba(13, 20, 35, 0.9);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.controls-overlay:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+}
+
+.interaction-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 50; /* 确保在视频之上，但在控件之下 */
+  cursor: pointer; /* 提示用户可以点击 */
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+.interaction-overlay:hover {
+  background: rgba(0, 0, 0, 0.4); /* 悬停时加深背景 */
+}
+
+.overlay-tip {
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-family-tech);
+  font-size: var(--text-card-title);
+  font-weight: 600;
+  letter-spacing: 2px;
+  background: rgba(13, 20, 35, 0.9);
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 243, 255, 0.5);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+  pointer-events: none;
+  user-select: none;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interaction-overlay:hover .overlay-tip {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+}

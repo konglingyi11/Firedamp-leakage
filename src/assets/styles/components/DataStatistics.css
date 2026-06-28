@@ -1,0 +1,1040 @@
+.data-statistics {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem;
+}
+
+.data-statistics h3 {
+  margin: 0 0 0.75rem 0;
+  color: var(--primary-light);
+  font-size: var(--text-panel-title);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* 数据统计侧栏：统一面板（数据源 / 气体 / 时刻 / 区间 / 环境参数） */
+.ds-stat-panel {
+  position: relative;
+  background: rgba(13, 20, 35, 0.72);
+  border: 1px solid rgba(0, 243, 255, 0.16);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.ds-stat-panel::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--primary-color);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ds-stat-panel:hover {
+  border-color: rgba(0, 243, 255, 0.32);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.monitoring-point {
+  padding: 0;
+}
+
+.point-header {
+  display: none;
+}
+
+.point-label {
+  display: none;
+}
+
+.point-label::before {
+  display: none;
+}
+
+.action-btn {
+  background: rgba(0, 243, 255, 0.1) !important;
+  border: 1px solid rgba(0, 243, 255, 0.3) !important;
+  color: rgba(0, 243, 255, 0.8) !important;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+  background: rgba(0, 243, 255, 0.2) !important;
+  color: #fff !important;
+  border-color: rgba(0, 243, 255, 0.6) !important;
+}
+
+.delete-btn:hover {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border-color: rgba(244, 63, 94, 0.6) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+}
+
+.action-btn.is-disabled,
+.action-btn.is-disabled:hover {
+  background: rgba(13, 20, 35, 0.3) !important;
+  border-color: rgba(0, 243, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.2) !important;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.point-coordinates {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.coordinate-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.coordinate-label {
+  color: rgba(0, 243, 255, 0.8);
+  font-size: var(--text-body);
+  font-weight: 600;
+  width: 1.5rem;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
+}
+
+.coordinate-input {
+  flex: 1;
+}
+
+.apply-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  height: 2.25rem;
+  background: rgba(0, 243, 255, 0.1) !important;
+  border: 1px solid rgba(0, 243, 255, 0.4) !important;
+  color: var(--primary-light) !important;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+  border-radius: 0.25rem;
+  text-shadow: 0 0 5px rgba(0, 243, 255, 0.4);
+}
+
+.apply-btn:hover {
+  background: rgba(0, 243, 255, 0.3) !important;
+  border-color: rgba(0, 243, 255, 0.8) !important;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+  transform: translateY(-1px);
+  color: #fff !important;
+}
+
+.apply-btn:active {
+  transform: translateY(1px);
+}
+
+.point-coordinates .point-pregen-toggle {
+  margin-top: 0;
+}
+
+.point-pregen-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.625rem;
+  padding: 0.375rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  z-index: 2;
+}
+
+.point-pregen-toggle .selector-label {
+  font-size: var(--text-caption);
+  color: var(--text-secondary);
+}
+
+.point-pregen-toggle .el-switch {
+  --el-switch-off-color: rgba(255, 255, 255, 0.12);
+  --el-switch-on-color: rgba(0, 243, 255, 0.5);
+}
+
+.coordinate-input :deep(.el-input__wrapper) {
+  background-color: rgba(13, 20, 35, 0.6) !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(0, 243, 255, 0.2) !important;
+  padding: 0 10px !important;
+  border-radius: 0.25rem;
+  transition: all 0.3s;
+}
+
+/* 监测点选择框样式（与项目其他下拉框统一） */
+.point-select-wrapper {
+  flex: 1;
+}
+
+.monitoring-select {
+  width: 100%;
+}
+
+:deep(.monitoring-select.el-select),
+:deep(.monitoring-select .el-select__wrapper) {
+  width: 100% !important;
+}
+
+:deep(.monitoring-select .el-select__wrapper),
+:deep(.monitoring-select .el-input__wrapper) {
+  background: rgba(13, 20, 35, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.2) inset !important;
+  border-radius: 0.25rem !important;
+  border: none !important;
+  transition: all 0.3s !important;
+  min-height: 36px;
+}
+
+:deep(.monitoring-select .el-select__wrapper:hover),
+:deep(.monitoring-select .el-input__wrapper:hover),
+:deep(.monitoring-select .el-select__wrapper.is-focused),
+:deep(.monitoring-select .el-input__wrapper.is-focus) {
+  background: rgba(13, 20, 35, 0.85) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 243, 255, 0.55) inset,
+    0 0 10px rgba(0, 243, 255, 0.22) !important;
+}
+
+:deep(.monitoring-select .el-select__selected-item),
+:deep(.monitoring-select .el-input__inner) {
+  color: var(--text-primary) !important;
+  font-family: var(--font-family-tech) !important;
+  font-weight: 600;
+  text-align: left;
+  font-size: var(--text-label) !important;
+}
+
+:deep(.monitoring-select .el-select__placeholder),
+:deep(.monitoring-select .el-input__inner::placeholder) {
+  color: rgba(0, 243, 255, 0.45) !important;
+}
+
+:deep(.monitoring-select .el-select__caret),
+:deep(.monitoring-select .el-icon) {
+  color: var(--primary-color) !important;
+}
+
+.coordinate-input :deep(.el-input__wrapper:hover),
+.coordinate-input :deep(.el-input__wrapper.is-focus) {
+  border-color: rgba(0, 243, 255, 0.6) !important;
+  background-color: rgba(13, 20, 35, 0.8) !important;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2) !important;
+}
+
+.coordinate-input :deep(.el-input__inner) {
+  color: var(--primary-light) !important;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  text-align: left;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: var(--text-body) !important;
+}
+
+.selector-header {
+  padding: 10px 15px;
+  background: linear-gradient(90deg, rgba(0, 243, 255, 0.1), transparent);
+  border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selector-label {
+  font-family: var(--font-family-tech);
+  font-size: var(--text-body);
+  color: var(--primary-light);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.selector-content {
+  padding: 15px;
+}
+
+.point-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 15px;
+}
+
+.point-selector-row .row-label {
+  color: rgba(0, 243, 255, 0.8);
+  font-size: var(--text-body);
+  font-weight: 600;
+  white-space: nowrap;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
+}
+
+.point-selector-row .monitoring-select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 环境参数卡片内：查看时刻 */
+.env-params-time-block {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+}
+
+.env-params-time-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.env-params-time-row .row-label {
+  color: rgba(0, 243, 255, 0.85);
+  font-size: var(--text-body);
+  font-weight: 600;
+  white-space: nowrap;
+  font-family: 'Courier New', monospace;
+  flex-shrink: 0;
+}
+
+.env-params-time-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.env-params-time-hint {
+  margin-top: 0.35rem !important;
+}
+
+.stats-chart-range-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding-bottom: 0.5rem;
+}
+
+.stats-chart-range-row .monitoring-select {
+  flex: 1;
+  min-width: 7.5rem;
+}
+
+.stats-time-sep {
+  color: rgba(0, 243, 255, 0.45);
+  font-size: var(--text-caption);
+  user-select: none;
+}
+
+.stats-time-hint {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-caption);
+  line-height: var(--leading-normal);
+  color: var(--text-tertiary);
+  opacity: 0.92;
+  width: 100%;
+}
+
+.stats-time-hint--block {
+  flex-basis: 100%;
+  margin-top: 0.65rem;
+}
+
+.stats-time-hint strong {
+  color: rgba(0, 243, 255, 0.65);
+  font-weight: 600;
+}
+
+.stats-overview-toolbar {
+  margin-bottom: 0.75rem;
+}
+
+.stats-overview-toolbar-header {
+  justify-content: space-between;
+}
+
+.overview-chart-btn {
+  border-radius: 0.25rem;
+  background: rgba(0, 243, 255, 0.12) !important;
+  border: 1px solid rgba(0, 243, 255, 0.38) !important;
+  color: var(--primary-light) !important;
+  font-family: var(--font-family-tech);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.overview-chart-btn:hover {
+  background: rgba(0, 243, 255, 0.24) !important;
+  border-color: rgba(0, 243, 255, 0.68) !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.2);
+}
+
+.overview-chart-btn.is-disabled,
+.overview-chart-btn.is-disabled:hover {
+  background: rgba(13, 20, 35, 0.35) !important;
+  border-color: rgba(0, 243, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: none;
+}
+
+.gas-select-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gas-select-row .gas-select {
+  width: 100% !important;
+  min-width: 0;
+  display: block;
+}
+
+.gas-select-row :deep(.gas-select.el-select) {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.gas-select-row :deep(.gas-select .el-select__wrapper) {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.gas-select-row :deep(.gas-select .el-select__selection) {
+  width: 100% !important;
+}
+
+/* Element Plus 2.x：多选框用 el-select__wrapper；scoped 下需 :deep 才能进组件内部 */
+.data-statistics :deep(.gas-select.el-select .el-select__wrapper) {
+  background-color: rgba(13, 20, 35, 0.85) !important;
+  background: rgba(13, 20, 35, 0.85) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.28) inset !important;
+  border-radius: 0.25rem !important;
+  border: none !important;
+  min-height: 36px !important;
+}
+
+.data-statistics :deep(.gas-select.el-select .el-select__wrapper:hover) {
+  background-color: rgba(18, 28, 48, 0.92) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.45) inset !important;
+}
+
+.data-statistics :deep(.gas-select.el-select .el-select__wrapper.is-focused) {
+  background-color: rgba(18, 28, 48, 0.95) !important;
+  box-shadow:
+    0 0 0 1px var(--primary-color) inset,
+    0 0 14px rgba(0, 243, 255, 0.2) !important;
+}
+
+.data-statistics :deep(.gas-select.el-select.is-disabled .el-select__wrapper) {
+  background-color: rgba(13, 20, 35, 0.45) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.12) inset !important;
+  opacity: 0.85;
+}
+
+.data-statistics :deep(.gas-select .el-select__placeholder) {
+  color: rgba(0, 243, 255, 0.42) !important;
+}
+
+.data-statistics :deep(.gas-select .el-select__selected-item),
+.data-statistics :deep(.gas-select .el-select__tags-text) {
+  color: rgba(230, 248, 255, 0.95) !important;
+}
+
+.data-statistics :deep(.gas-select .el-select__caret) {
+  color: var(--primary-light) !important;
+}
+
+.data-statistics :deep(.gas-select .el-tag),
+.data-statistics :deep(.gas-select .el-select__selection .el-tag) {
+  --el-tag-text-color: rgba(200, 250, 255, 0.95) !important;
+  --el-tag-bg-color: rgba(0, 243, 255, 0.14) !important;
+  --el-tag-border-color: rgba(0, 243, 255, 0.38) !important;
+  background-color: rgba(0, 243, 255, 0.14) !important;
+  border-color: rgba(0, 243, 255, 0.38) !important;
+  color: rgba(200, 250, 255, 0.95) !important;
+}
+
+.data-statistics :deep(.gas-select .el-tag .el-tag__close) {
+  color: rgba(0, 243, 255, 0.75) !important;
+}
+
+.data-statistics :deep(.gas-select .el-tag .el-tag__close:hover) {
+  background: rgba(0, 243, 255, 0.25) !important;
+  color: #fff !important;
+}
+
+.data-statistics :deep(.gas-select.el-select.is-disabled .el-tag) {
+  --el-tag-bg-color: rgba(255, 255, 255, 0.06) !important;
+  --el-tag-border-color: rgba(255, 255, 255, 0.1) !important;
+  --el-tag-text-color: rgba(255, 255, 255, 0.45) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.gas-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0;
+  min-height: auto;
+}
+
+.gas-option :deep(.el-color-picker__trigger) {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.gas-option span {
+  flex: 1;
+  min-width: 0;
+  word-break: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gas-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.realtime-data {
+  margin-bottom: 0;
+}
+
+.section-header {
+  padding: 10px 15px;
+  background: linear-gradient(90deg, rgba(0, 243, 255, 0.1), transparent);
+  border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 0;
+}
+
+.section-header .selector-label {
+  margin: 0;
+}
+
+.section-content {
+  padding: 1.25rem;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.25rem;
+  border: 1px solid rgba(0, 243, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.data-item:hover {
+  background: rgba(0, 243, 255, 0.06);
+  border-color: rgba(0, 243, 255, 0.2);
+}
+
+/* 监测点环境参数：电磁波衰减率 / 强度各占一整行（与两列表格区分开） */
+.data-item--row-full {
+  grid-column: span 2;
+}
+
+.data-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--text-caption);
+  font-weight: 500;
+}
+
+.data-value {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: var(--font-md);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.gas-expand-row {
+  grid-column: span 2;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.gas-expand-row :deep(.el-button) {
+  background: rgba(0, 243, 255, 0.08);
+  border: 1px solid rgba(0, 243, 255, 0.35);
+  color: var(--primary-light);
+  font-family: var(--font-family-tech);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 0.25rem;
+  padding: 0.45rem 1rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: none;
+}
+
+.gas-expand-row :deep(.el-button:hover) {
+  background: rgba(0, 243, 255, 0.18) !important;
+  border-color: rgba(0, 243, 255, 0.65) !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.18);
+}
+
+.gas-expand-row :deep(.el-button:focus-visible) {
+  outline: 2px solid rgba(0, 243, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.charts-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.chart-item {
+  width: 100%;
+  min-height: 21.25rem;
+  background: rgba(13, 20, 35, 0.5);
+  border: 1px solid rgba(0, 243, 255, 0.12);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  flex-shrink: 0; /* 防止被压缩 */
+  position: relative;
+}
+
+.chart-item:hover {
+  border-color: rgba(0, 243, 255, 0.22);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 21.25rem;
+}
+
+.chart {
+  width: 100%;
+  height: 100%;
+  min-height: 21.25rem;
+}
+
+.chart-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 20, 35, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 20;
+  border-radius: 0.5rem;
+}
+
+.chart-loading .is-loading {
+  font-size: 2rem;
+  color: var(--primary-color);
+  animation: rotate 1s linear infinite;
+  margin-bottom: 0.75rem;
+}
+
+.chart-loading span {
+  color: var(--primary-light);
+  font-size: var(--text-body);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 图表覆盖层 - 用于点击打开弹窗，只覆盖图表主体，不覆盖图例 */
+.chart-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* 气体质量分数图表的覆盖层 - 专门留出更多空间给图例 */
+.gas-chart-item .chart-overlay {
+  right: 25%; /* 给图例留出更多空间 */
+}
+
+/* 对于没有右侧图例的图表，覆盖整个区域 */
+.chart-row .chart-overlay {
+  right: 0;
+}
+
+/* 悬停效果 */
+.chart-item:hover .chart-overlay {
+  background: rgba(0, 243, 255, 0.03);
+}
+
+/* 图表弹窗样式 */
+.dialog-chart {
+  width: 100%;
+  flex: 1;
+  min-height: 400px;
+  height: 500px;
+}
+
+/* 时间选择器样式 - 与气体选择器保持一致 */
+.time-selector {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(13, 20, 35, 0.6);
+  border: 1px solid rgba(0, 243, 255, 0.15);
+  border-radius: 2px;
+  position: relative;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.time-selector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--primary-color);
+  opacity: 0.5;
+}
+
+.time-selector:hover {
+  border-color: rgba(0, 243, 255, 0.4);
+  background: rgba(13, 20, 35, 0.8);
+}
+
+.dialog-gas-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(13, 20, 35, 0.6);
+  border-radius: 2px;
+  border: 1px solid rgba(0, 243, 255, 0.15);
+  position: relative;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+/* 监测点选择下拉框样式 */
+
+.dialog-gas-selector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--primary-color);
+  opacity: 0.5;
+}
+
+.dialog-gas-selector:hover {
+  border-color: rgba(0, 243, 255, 0.4);
+  background: rgba(13, 20, 35, 0.8);
+}
+
+.dialog-gas-selector .selector-label {
+  font-family: var(--font-family-tech);
+  font-size: var(--text-body);
+  color: var(--primary-light);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding-left: 0.5rem;
+}
+
+.gas-select-dialog {
+  width: 200px;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.time-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-body);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 弹窗遮罩层 */
+:deep(.el-overlay) {
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(0.5rem);
+}
+
+/* 禁用背景滚动 */
+body.el-popup-parent--hidden {
+  overflow: hidden !important;
+}
+
+/* 滚动条样式由全局 style.css 控制 */
+
+/* Removed point-select styles */
+
+/* 图表弹窗样式 - 非 scoped，确保能覆盖 Element Plus 样式 */
+
+
+
+
+
+
+
+/* 时间选择器下拉框样式 - 与气体选择器保持一致的深色主题 */
+
+
+
+
+
+/* 时间选择器图标颜色 */
+
+
+/* 监测点选择下拉菜单样式 */
+.monitoring-select-dropdown.el-popper {
+  background: rgba(13, 20, 35, 0.95) !important;
+  border: 1px solid rgba(0, 243, 255, 0.3) !important;
+  border-radius: 0.25rem !important;
+  backdrop-filter: blur(10px);
+}
+
+.monitoring-select-dropdown .el-select-dropdown__item {
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
+  padding: 0.5rem 0.75rem !important;
+  min-height: 36px !important;
+  line-height: var(--leading-normal) !important;
+  display: flex;
+  align-items: center;
+}
+
+.monitoring-select-dropdown .el-select-dropdown__item.hover,
+.monitoring-select-dropdown .el-select-dropdown__item:hover {
+  background: rgba(0, 243, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+.monitoring-select-dropdown .el-select-dropdown__item.selected {
+  color: var(--primary-color) !important;
+  font-weight: 600 !important;
+  background: rgba(0, 243, 255, 0.15) !important;
+}
+/* 时间选择器placeholder颜色 */
+
+/* 气体选择下拉框样式 - 使用最强的选择器覆盖 Element Plus 默认样式 */
+
+
+
+
+
+
+
+
+.data-statistics .gas-select.el-select .el-input__wrapper,
+.data-statistics .gas-select-dialog.el-select .el-input__wrapper,
+
+/* 禁用状态样式覆盖 */
+.data-statistics .monitoring-select.el-select.is-disabled .el-input__wrapper,
+.data-statistics
+  .monitoring-select.el-select.is-disabled
+  .el-input__wrapper:hover,
+.data-statistics .gas-select.el-select.is-disabled .el-input__wrapper,
+.data-statistics .gas-select.el-select.is-disabled .el-input__wrapper:hover {
+  background-color: rgba(13, 20, 35, 0.3) !important;
+  background: rgba(13, 20, 35, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.1) inset !important;
+}
+
+.data-statistics .monitoring-select.el-select.is-disabled .el-input__inner,
+.data-statistics .gas-select.el-select.is-disabled .el-input__inner {
+  color: rgba(255, 255, 255, 0.3) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.data-statistics
+  .monitoring-select.el-select.is-disabled
+  .el-input__inner::placeholder,
+.data-statistics
+  .gas-select.el-select.is-disabled
+  .el-input__inner::placeholder {
+  color: rgba(255, 255, 255, 0.2) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 修复禁用状态下多选 Tag 的样式 */
+.data-statistics .gas-select.el-select.is-disabled .el-tag {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.data-statistics .gas-select.el-select.is-disabled .el-tag .el-tag__close {
+  display: none;
+}
+
+.data-statistics .gas-select.el-select .el-input__wrapper:hover,
+.data-statistics .gas-select-dialog.el-select .el-input__wrapper:hover,
+
+.data-statistics .gas-select.el-select .el-input__wrapper.is-focus,
+.data-statistics .gas-select-dialog.el-select .el-input__wrapper.is-focus,
+
+.data-statistics .gas-select .el-input__inner,
+.data-statistics .gas-select-dialog .el-input__inner,
+
+/* 确保选择框图标也是青色 */
+.data-statistics .gas-select .el-select__caret,
+.data-statistics .gas-select-dialog .el-select__caret,
+
+.data-statistics .gas-select .el-select__caret:hover,
+.data-statistics .gas-select-dialog .el-select__caret:hover,
+
+/* 选择框placeholder颜色 */
+.data-statistics .gas-select .el-input__inner::placeholder,
+.data-statistics .gas-select-dialog .el-input__inner::placeholder,
+
+/* 额外确保 el-select 本身也有正确的背景 */
+.data-statistics .gas-select.el-select,
+.data-statistics .gas-select-dialog.el-select,
+
+.gas-select-dropdown {
+  background: rgba(13, 20, 35, 0.95) !important;
+  border: 1px solid rgba(0, 243, 255, 0.3) !important;
+  box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.5) !important;
+  border-radius: 2px !important;
+}
+
+.gas-select-dropdown .el-select-dropdown__item {
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
+  padding: 10px 15px !important;
+  transition: all 0.2s !important;
+}
+
+.gas-select-dropdown .el-select-dropdown__item:hover {
+  background: rgba(0, 243, 255, 0.1) !important;
+  color: var(--primary-color) !important;
+}
+
+.gas-select-dropdown .el-select-dropdown__item.is-selected {
+  color: var(--primary-color) !important;
+  font-weight: 600 !important;
+  background: rgba(0, 243, 255, 0.15) !important;
+  position: relative;
+}
+
+.gas-select-dropdown .el-select-dropdown__item.is-selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--primary-color);
+  box-shadow: 0 0 0.5rem var(--primary-color);
+}
+
+/* 下拉菜单选项样式 */
+.el-select-dropdown,
+.time-select-dropdown {
+  background: rgba(13, 20, 35, 0.95) !important;
+  border: 1px solid rgba(0, 243, 255, 0.3) !important;
+  box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.5) !important;
+}
+
+.el-select-dropdown .el-select-dropdown__item,
+.time-select-dropdown .el-select-dropdown__item {
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.el-select-dropdown .el-select-dropdown__item:hover,
+.time-select-dropdown .el-select-dropdown__item:hover {
+  background: rgba(0, 243, 255, 0.1) !important;
+  color: var(--primary-color) !important;
+}
+
+.el-select-dropdown .el-select-dropdown__item.is-selected,
+.time-select-dropdown .el-select-dropdown__item.is-selected {
+  color: var(--primary-color) !important;
+  font-weight: 600 !important;
+  background: rgba(0, 243, 255, 0.05) !important;
+}
+
+/* 确保下拉框有足够的 z-index */
+.el-popper.is-light,
+.time-select-dropdown.el-popper {
+  z-index: 10000 !important;
+}
+
+.el-popper.is-light .el-popper__arrow::before,
+.time-select-dropdown.el-popper .el-popper__arrow::before {
+  background: rgba(13, 20, 35, 0.95) !important;
+  border: 1px solid rgba(0, 243, 255, 0.3) !important;
+}

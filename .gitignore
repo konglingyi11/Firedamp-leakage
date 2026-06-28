@@ -1,0 +1,48 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.superpowers/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+dist/*
+
+# AI / IDE / Tool directories
+.claude/
+.codebuddy/
+.kiro/
+.omc/
+.sisyphus/
+.superpowers/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.vtk
+*.vtu
+*.vti
+*.las
+*.docx
+*.vsdx
+/public/vtu
+/public/pcd
+/public/models
+*.docx
+.mimocode
+.analysis_outputs
+.public/dataset
+Standing Idle.glb

@@ -1,0 +1,336 @@
+/* DataStatistics 弹窗样式（非 scoped） */
+
+.chart-dialog {
+  background: rgba(13, 20, 35, 0.95) !important;
+  backdrop-filter: blur(1.25rem);
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  max-height: 90vh !important;
+  overflow: hidden !important;
+}
+.chart-dialog .el-dialog__header {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 243, 255, 0.1) 0%,
+    transparent 100%
+  ) !important;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  margin-right: 0 !important;
+  padding: 1rem 1.25rem !important;
+  flex-shrink: 0;
+}
+.chart-dialog .el-dialog__title {
+  color: var(--primary-light);
+  font-family: var(--font-family-tech);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.chart-dialog .el-dialog__headerbtn {
+  top: 1rem;
+  right: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.chart-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: var(--text-secondary);
+  font-size: var(--text-panel-title);
+}
+.chart-dialog .el-dialog__headerbtn:hover .el-dialog__close {
+  color: var(--primary-color);
+}
+.chart-dialog .el-dialog__body {
+  padding: 1.25rem !important;
+  color: #fff !important;
+  background: transparent !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  height: calc(90vh - 80px);
+}
+.chart-dialog .time-selector .el-select {
+  width: 11.25rem;
+}
+.chart-dialog .time-selector .el-select .el-input__wrapper,
+.time-selector .el-select .el-input__wrapper {
+  background-color: rgba(13, 20, 35, 0.6) !important;
+  background: rgba(13, 20, 35, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.2) inset !important;
+  border-radius: 2px !important;
+  transition: all 0.3s !important;
+  border: none !important;
+}
+.chart-dialog .time-selector .el-select .el-input__wrapper:hover,
+.time-selector .el-select .el-input__wrapper:hover {
+  background-color: rgba(13, 20, 35, 0.8) !important;
+  background: rgba(13, 20, 35, 0.8) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.4) inset !important;
+}
+.chart-dialog .time-selector .el-select .el-input__wrapper.is-focus,
+.time-selector .el-select .el-input__wrapper.is-focus {
+  background-color: rgba(13, 20, 35, 0.9) !important;
+  background: rgba(13, 20, 35, 0.9) !important;
+  box-shadow:
+    0 0 0 1px var(--primary-color) inset,
+    0 0 10px rgba(0, 243, 255, 0.2) !important;
+}
+.chart-dialog .time-selector .el-select .el-input__inner,
+.time-selector .el-select .el-input__inner {
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+  font-family: var(--font-family-tech) !important;
+}
+.chart-dialog .time-selector .el-select .el-select__caret,
+.time-selector .el-select .el-select__caret,
+.chart-dialog .time-selector .el-select .el-icon,
+.time-selector .el-select .el-icon {
+  color: var(--primary-light) !important;
+}
+.chart-dialog .time-selector .el-select .el-select__caret:hover,
+.time-selector .el-select .el-select__caret:hover {
+  color: var(--primary-color) !important;
+}
+.chart-dialog .time-selector .el-select .el-input__inner::placeholder,
+.time-selector .el-select .el-input__inner::placeholder,
+.chart-dialog .time-selector .el-select input::placeholder,
+.time-selector .el-select input::placeholder {
+  color: rgba(0, 243, 255, 0.4) !important;
+}
+.chart-dialog .gas-select-dialog.el-select .el-select__wrapper,
+.chart-dialog .gas-select-dialog .el-select__wrapper {
+  background-color: rgba(13, 20, 35, 0.6) !important;
+  background: rgba(13, 20, 35, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.2) inset !important;
+  border-radius: 2px !important;
+  border: none !important;
+  min-height: 32px !important;
+}
+.chart-dialog .gas-select-dialog.el-select .el-select__wrapper:hover,
+.chart-dialog .gas-select-dialog .el-select__wrapper:hover {
+  background-color: rgba(13, 20, 35, 0.8) !important;
+  background: rgba(13, 20, 35, 0.8) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.4) inset !important;
+}
+.chart-dialog .gas-select-dialog.el-select .el-select__wrapper.is-focused,
+.chart-dialog .gas-select-dialog .el-select__wrapper.is-focused {
+  background-color: rgba(13, 20, 35, 0.9) !important;
+  background: rgba(13, 20, 35, 0.9) !important;
+  box-shadow:
+    0 0 0 1px var(--primary-color) inset,
+    0 0 10px rgba(0, 243, 255, 0.2) !important;
+}
+.chart-dialog .gas-select-dialog .el-select__placeholder,
+.chart-dialog .gas-select-dialog input::placeholder {
+  color: rgba(0, 243, 255, 0.4) !important;
+}
+.chart-dialog .gas-select-dialog .el-select__selected-item,
+.chart-dialog .gas-select-dialog .el-select__tags-text {
+  color: rgba(230, 248, 255, 0.95) !important;
+}
+.chart-dialog .gas-select-dialog .el-tag {
+  --el-tag-text-color: rgba(200, 250, 255, 0.95) !important;
+  --el-tag-bg-color: rgba(0, 243, 255, 0.14) !important;
+  --el-tag-border-color: rgba(0, 243, 255, 0.38) !important;
+  background-color: rgba(0, 243, 255, 0.14) !important;
+  border-color: rgba(0, 243, 255, 0.38) !important;
+  color: rgba(200, 250, 255, 0.95) !important;
+}
+.chart-dialog .gas-select-dialog .el-tag .el-tag__close {
+  color: rgba(0, 243, 255, 0.75) !important;
+}
+.chart-dialog .gas-select-dialog .el-tag .el-tag__close:hover {
+  background: rgba(0, 243, 255, 0.25) !important;
+  color: #fff !important;
+}
+.chart-dialog .gas-select-dialog.el-select .el-input__wrapper,
+.data-statistics .gas-select .el-input .el-input__wrapper,
+.data-statistics .gas-select-dialog .el-input .el-input__wrapper,
+.chart-dialog .gas-select-dialog .el-input .el-input__wrapper,
+.data-statistics .monitoring-select.el-select .el-input__wrapper,
+.data-statistics .monitoring-select .el-input .el-input__wrapper {
+  background-color: rgba(13, 20, 35, 0.6) !important;
+  background: rgba(13, 20, 35, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.2) inset !important;
+  border-radius: 2px !important;
+  transition: all 0.3s !important;
+  border: none !important;
+}
+.chart-dialog .gas-select-dialog.el-select .el-input__wrapper:hover,
+.data-statistics .gas-select .el-input .el-input__wrapper:hover,
+.data-statistics .gas-select-dialog .el-input .el-input__wrapper:hover,
+.chart-dialog .gas-select-dialog .el-input .el-input__wrapper:hover,
+.data-statistics .monitoring-select.el-select .el-input__wrapper:hover,
+.data-statistics .monitoring-select .el-input .el-input__wrapper:hover {
+  background-color: rgba(13, 20, 35, 0.8) !important;
+  background: rgba(13, 20, 35, 0.8) !important;
+  box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.4) inset !important;
+}
+.chart-dialog .gas-select-dialog.el-select .el-input__wrapper.is-focus,
+.data-statistics .gas-select .el-input .el-input__wrapper.is-focus,
+.data-statistics .gas-select-dialog .el-input .el-input__wrapper.is-focus,
+.chart-dialog .gas-select-dialog .el-input .el-input__wrapper.is-focus,
+.data-statistics .monitoring-select.el-select .el-input__wrapper.is-focus,
+.data-statistics .monitoring-select .el-input .el-input__wrapper.is-focus {
+  background-color: rgba(13, 20, 35, 0.9) !important;
+  background: rgba(13, 20, 35, 0.9) !important;
+  box-shadow:
+    0 0 0 1px var(--primary-color) inset,
+    0 0 10px rgba(0, 243, 255, 0.2) !important;
+}
+.chart-dialog .gas-select-dialog .el-input__inner,
+.data-statistics .gas-select .el-input .el-input__inner,
+.data-statistics .gas-select-dialog .el-input .el-input__inner,
+.chart-dialog .gas-select-dialog .el-input .el-input__inner,
+.data-statistics .monitoring-select .el-input__inner,
+.data-statistics .monitoring-select .el-input .el-input__inner {
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+  font-family: var(--font-family-tech) !important;
+}
+.chart-dialog .gas-select-dialog .el-select__caret,
+.data-statistics .gas-select .el-icon,
+.data-statistics .gas-select-dialog .el-icon,
+.chart-dialog .gas-select-dialog .el-icon,
+.data-statistics .monitoring-select .el-select__caret,
+.data-statistics .monitoring-select .el-icon {
+  color: var(--primary-light) !important;
+}
+.chart-dialog .gas-select-dialog .el-select__caret:hover,
+.data-statistics .monitoring-select .el-select__caret:hover {
+  color: var(--primary-color) !important;
+}
+.chart-dialog .gas-select-dialog .el-input__inner::placeholder,
+.data-statistics .gas-select input::placeholder,
+.data-statistics .gas-select-dialog input::placeholder,
+.chart-dialog .gas-select-dialog input::placeholder,
+.data-statistics .monitoring-select .el-input__inner::placeholder,
+.data-statistics .monitoring-select input::placeholder {
+  color: rgba(0, 243, 255, 0.4) !important;
+}
+.chart-dialog .gas-select-dialog.el-select,
+.data-statistics .monitoring-select.el-select {
+  --el-fill-color-blank: rgba(13, 20, 35, 0.6) !important;
+  --el-border-color: rgba(0, 243, 255, 0.2) !important;
+  --el-border-color-hover: rgba(0, 243, 255, 0.4) !important;
+  --el-text-color-regular: var(--primary-light) !important;
+}
+
+.stats-overview-dialog.chart-dialog {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.stats-overview-dialog.chart-dialog .el-dialog__body {
+  height: calc(100vh - 64px);
+  overflow-y: auto !important;
+  padding: 1rem !important;
+}
+
+.stats-overview-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stats-overview-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stats-overview-filter {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: rgba(13, 20, 35, 0.72);
+  border: 1px solid rgba(0, 243, 255, 0.16);
+  border-radius: 0.5rem;
+}
+
+.stats-overview-select {
+  width: 100% !important;
+}
+
+.stats-overview-filter--range {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.stats-overview-range-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stats-overview-time-select {
+  flex: 1;
+  min-width: 0;
+  width: auto !important;
+}
+
+.stats-overview-kpi {
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  background: rgba(13, 20, 35, 0.72);
+  border: 1px solid rgba(0, 243, 255, 0.16);
+  border-radius: 0.5rem;
+}
+
+.stats-overview-kpi span {
+  display: block;
+  color: rgba(203, 213, 225, 0.72);
+  font-size: var(--text-caption);
+  margin-bottom: 0.35rem;
+}
+
+.stats-overview-kpi strong {
+  color: var(--primary-light);
+  font-family: var(--font-family-tech);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.stats-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.stats-overview-card {
+  min-height: 22rem;
+  background: rgba(13, 20, 35, 0.64);
+  border: 1px solid rgba(0, 243, 255, 0.14);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.stats-overview-card--wide {
+  grid-column: 1 / -1;
+  min-height: 26rem;
+}
+
+.stats-overview-chart {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+@media (max-width: 920px) {
+  .stats-overview-summary,
+  .stats-overview-controls,
+  .stats-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-overview-card--wide {
+    grid-column: auto;
+  }
+}
