@@ -32,6 +32,16 @@ const goafGasSources = ref([])
 const goafGasParams = ref({})
 const collapsed = ref(false)
 const goafGasParamsExpanded = ref(true)
+// 默认隐藏参数调节面板，点击"调试"按钮才显示
+const showDebugPanel = ref(false)
+const debugPanelRef = ref(null)
+// 显示参数面板时自动滚动到可见区域，避免被 max-height 裁剪看不到
+watch(showDebugPanel, async (v) => {
+  if (v) {
+    await nextTick()
+    debugPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
+})
 const goafBlocks = ref([])
 const goafBlockScale = ref(0.5)
 const TARGET_COAL_OBJECT_NAME = 'tyFlow004'
@@ -278,19 +288,27 @@ defineExpose({
           @click="handleGoafGasStart">
           开始泄漏
         </button>
-        <button
+        <!-- <button
           type="button"
           class="goaf-gas-btn goaf-gas-btn--danger"
           title="手动点火"
           @click="handleGoafGasIgnite">
           点火
-        </button>
+        </button> -->
         <button
           type="button"
           class="goaf-gas-btn goaf-gas-btn--warning"
           title="手动触发爆炸"
           @click="handleGoafGasExplode">
           爆炸
+        </button>
+        <button
+          type="button"
+          class="goaf-gas-btn"
+          :class="{ 'goaf-gas-btn--primary': showDebugPanel }"
+          :title="showDebugPanel ? '隐藏参数调节面板' : '显示参数调节面板'"
+          @click="showDebugPanel = !showDebugPanel">
+          调试
         </button>
         <button
           type="button"
@@ -403,7 +421,7 @@ defineExpose({
         <label
           v-if="targetCoalObjectExists"
           class="goaf-gas-row goaf-gas-row--field">
-          <span>tyFlow004</span>
+          <span>煤炭</span>
           <label class="goaf-gas-checkbox">
             <input
               type="checkbox"
@@ -424,14 +442,6 @@ defineExpose({
               {{ block.type === 'rock' ? '石' : '煤' }} #{{ idx + 1 }}
             </span>
             <div class="goaf-gas-block-actions">
-              <button
-                v-if="block.name === '__ignitionCoal'"
-                type="button"
-                class="goaf-gas-btn goaf-gas-btn--mini goaf-gas-btn--warning"
-                title="熄灭火焰"
-                @click="handleGoafGasExtinguish">
-                熄灭
-              </button>
               <button
                 type="button"
                 class="goaf-gas-btn goaf-gas-btn--mini goaf-gas-btn--danger"
@@ -558,8 +568,8 @@ defineExpose({
         </div>
       </div>
 
-      <!-- 参数调节 -->
-      <div class="goaf-gas-section">
+      <!-- 参数调节（默认隐藏，点击"调试"按钮显示） -->
+      <div v-show="showDebugPanel" ref="debugPanelRef" class="goaf-gas-section">
         <div
           class="goaf-gas-section-title goaf-gas-section-title--collapsible"
           @click="goafGasParamsExpanded = !goafGasParamsExpanded">
@@ -674,7 +684,7 @@ defineExpose({
               min="0.05"
               max="0.6"
               step="0.05"
-              :value="goafGasParams.smokeSpeed ?? 0.45"
+              :value="goafGasParams.smokeSpeed ?? 0.15"
               @input="
                 updateGoafGasParam(
                   'smokeSpeed',
@@ -682,9 +692,75 @@ defineExpose({
                 )
               " />
             <span class="goaf-gas-value">{{
-              (goafGasParams.smokeSpeed ?? 0.45).toFixed(2)
+              (goafGasParams.smokeSpeed ?? 0.15).toFixed(2)
             }}</span>
           </label>
+
+          <div class="goaf-gas-section-title" style="margin-top: 0.5rem">烟雾方向速度</div>
+          <label class="goaf-gas-row">
+            <span>X 轴速度</span>
+            <input
+              type="range"
+              min="-2.0"
+              max="2.0"
+              step="0.1"
+              :value="goafGasParams.smokeVelX ?? -0.15"
+              @input="
+                updateGoafGasParam('smokeVelX', Number($event.target.value))
+              " />
+            <span class="goaf-gas-value">{{
+              (goafGasParams.smokeVelX ?? -0.15).toFixed(1)
+            }}</span>
+          </label>
+          <label class="goaf-gas-row">
+            <span>Y 轴速度</span>
+            <input
+              type="range"
+              min="-2.0"
+              max="2.0"
+              step="0.1"
+              :value="goafGasParams.smokeVelY ?? 0.05"
+              @input="
+                updateGoafGasParam('smokeVelY', Number($event.target.value))
+              " />
+            <span class="goaf-gas-value">{{
+              (goafGasParams.smokeVelY ?? 0.05).toFixed(1)
+            }}</span>
+          </label>
+          <label class="goaf-gas-row">
+            <span>Z 轴速度（上浮）</span>
+            <input
+              type="range"
+              min="-1.0"
+              max="3.0"
+              step="0.1"
+              :value="goafGasParams.smokeVelZ ?? 0.05"
+              @input="
+                updateGoafGasParam('smokeVelZ', Number($event.target.value))
+              " />
+            <span class="goaf-gas-value">{{
+              (goafGasParams.smokeVelZ ?? 0.05).toFixed(1)
+            }}</span>
+          </label>
+          <label class="goaf-gas-row">
+            <span>高度增益</span>
+            <input
+              type="range"
+              min="0"
+              max="1.0"
+              step="0.05"
+              :value="goafGasParams.smokeVelHeightGain ?? 0.1"
+              @input="
+                updateGoafGasParam(
+                  'smokeVelHeightGain',
+                  Number($event.target.value),
+                )
+              " />
+            <span class="goaf-gas-value">{{
+              (goafGasParams.smokeVelHeightGain ?? 0.1).toFixed(2)
+            }}</span>
+          </label>
+
           <label class="goaf-gas-row">
             <span>烟雾不透明度</span>
             <input
@@ -692,7 +768,7 @@ defineExpose({
               min="0.1"
               max="1.0"
               step="0.05"
-              :value="goafGasParams.smokeOpacity ?? 1.0"
+              :value="goafGasParams.smokeOpacity ?? 0.5"
               @input="
                 updateGoafGasParam(
                   'smokeOpacity',
@@ -700,18 +776,11 @@ defineExpose({
                 )
               " />
             <span class="goaf-gas-value">{{
-              (goafGasParams.smokeOpacity ?? 1.0).toFixed(2)
+              (goafGasParams.smokeOpacity ?? 0.5).toFixed(2)
             }}</span>
           </label>
 
           <div class="goaf-gas-section-title" style="margin-top: 0.5rem">效果开关</div>
-          <label class="goaf-gas-row">
-            <span>火焰</span>
-            <input
-              type="checkbox"
-              :checked="goafGasParams.flameEnabled !== false"
-              @change="updateGoafGasParam('flameEnabled', $event.target.checked)" />
-          </label>
           <label class="goaf-gas-row">
             <span>爆炸</span>
             <input
@@ -722,22 +791,28 @@ defineExpose({
               " />
           </label>
           <label class="goaf-gas-row">
-            <span>火焰强度</span>
+            <span>火球蔓延</span>
             <input
-              type="range"
-              min="0.2"
-              max="4"
-              step="0.1"
-              :value="goafGasParams.flameIntensity ?? 2.5"
-              @input="
-                updateGoafGasParam(
-                  'flameIntensity',
-                  Number($event.target.value),
-                )
+              type="checkbox"
+              :checked="goafGasParams.fireballEnabled === true"
+              @change="
+                updateGoafGasParam('fireballEnabled', $event.target.checked)
               " />
-            <span class="goaf-gas-value">{{
-              (goafGasParams.flameIntensity ?? 2.5).toFixed(1)
-            }}</span>
+          </label>
+
+          <label class="goaf-gas-row">
+            <span>火球蔓延方向</span>
+            <select
+              :value="goafGasParams.fireballAxis ?? 'auto'"
+              @change="updateGoafGasParam('fireballAxis', $event.target.value)">
+              <option value="auto">自动</option>
+              <option value="x">+X</option>
+              <option value="-x">-X</option>
+              <option value="y">+Y</option>
+              <option value="-y">-Y</option>
+              <option value="z">+Z</option>
+              <option value="-z">-Z</option>
+            </select>
           </label>
         </div>
       </div>

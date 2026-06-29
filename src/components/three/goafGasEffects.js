@@ -70,6 +70,11 @@ export class FlameEffect {
     this.color = new THREE.Color(options.color ?? '#ff6600')
     this.intensity = options.intensity ?? 1.5
     this.size = options.size ?? 2.5
+    // 烟雾/瓦斯水平漂移速度，火焰整体随风向倾斜/偏移
+    this.driftX = options.driftX ?? 0
+    this.driftY = options.driftY ?? 0
+    // 火焰竖直上升速度倍率（Z 轴），默认 1.0；低于 1 会让火焰更贴地蔓延
+    this.riseSpeed = Math.max(0, options.riseSpeed ?? 1.0)
     // 火焰蔓延：从点火点开始向外扩散的半径
     this.spreadRadius = options.spreadRadius ?? 0
     this.targetSpreadRadius = this.spreadRadius
@@ -77,16 +82,24 @@ export class FlameEffect {
     this.spreadSpeed = options.spreadSpeed ?? 1.5
     this.ignitedElapsed = 0
 
+    // 水平蔓延方向（Z 为竖直向上，因此只在 XY 平面蔓延）
+    this.spreadDirection = options.spreadDirection?.clone?.() || new THREE.Vector3(1, 0, 0)
+    this.spreadDirection.z = 0
+    if (this.spreadDirection.lengthSq() < 1e-6) this.spreadDirection.set(1, 0, 0)
+    this.spreadDirection.normalize()
+    this.spreadAnisotropy = Number.isFinite(options.spreadAnisotropy) ? options.spreadAnisotropy : 0.72
+
     this.group = new THREE.Group()
     this.group.position.copy(this.position)
 
-    // 点光源
+    // 点光源（项目坐标系 Z 竖直向上）
     this.light = new THREE.PointLight(this.color, this.intensity * 8, this.size * 12, 2)
-    this.light.position.set(0, this.size * 0.3, 0)
+    this.light.position.set(0, 0, this.size * 0.3)
     this.group.add(this.light)
 
-    // 粒子火焰核
-    this.count = Math.floor(options.count ?? 1600)
+    // 粒子火焰核，密度可控
+    const particleDensity = Math.max(0.1, Math.min(1, options.particleDensity ?? 0.5))
+    this.count = Math.floor((options.count ?? 1600) * particleDensity)
     this.geometry = new THREE.BufferGeometry()
     this.positions = new Float32Array(this.count * 3)
     this.velocities = new Float32Array(this.count * 3)
@@ -117,8 +130,8 @@ export class FlameEffect {
         vHeightRatio = heightRatio;
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mvPosition;
-        // 加大粒子尺寸，让火焰粒子充分重叠成连续火团
-        gl_PointSize = size * (460.0 / -mvPosition.z);
+        // 加大粒子尺寸，让火焰粒子充分重叠成连续火团；限制最大尺寸避免近相机时过度放大/闪烁
+        gl_PointSize = min(size * (460.0 / -mvPosition.z), 140.0);
       }
     `
     const fragmentShader = `
@@ -145,8 +158,8 @@ export class FlameEffect {
         // 越老、越高，越向烟色过渡
         color = mix(color, smoke, (1.0 - lifeFade * 0.7) * (1.0 - heightFade * 0.6));
 
-        // 径向 alpha：贴图 alpha 平滑衰减，让粒子边缘重叠融合成连续火团
-        float alpha = tex.a * (1.0 - smoothstep(0.75, 1.0, d));
+        // 径向 alpha：贴图 alpha 平滑衰减，整体再压低避免 additive 叠加过亮导致闪烁
+        float alpha = tex.a * (1.0 - smoothstep(0.75, 1.0, d)) * 0.75;
         alpha *= lifeFade * (0.85 + 0.15 * heightFade);
         if (alpha < 0.001) discard;
         gl_FragColor = vec4(color, alpha);
@@ -159,7 +172,8 @@ export class FlameEffect {
       uniforms: this.uniforms,
       transparent: true,
       depthWrite: false,
-      depthTest: true,
+      // 关闭深度测试：避免火焰粒子在几何体边缘因深度裁剪而忽隐忽现造成闪烁
+      depthTest: false,
       // AdditiveBlending 让火焰更像发光体，重叠处更亮
       blending: THREE.AdditiveBlending,
     })
@@ -190,6 +204,14 @@ export class FlameEffect {
     this.light.intensity = this.intensity * 4
   }
 
+  setSpreadDirection(dir) {
+    if (!dir) return
+    this.spreadDirection.copy(dir)
+    this.spreadDirection.z = 0
+    if (this.spreadDirection.lengthSq() < 1e-6) this.spreadDirection.set(1, 0, 0)
+    this.spreadDirection.normalize()
+  }
+
   setVisible(v) {
     this.visible = v
     this.group.visible = v
@@ -203,9 +225,19 @@ export class FlameEffect {
     this.targetSpreadRadius = Math.max(0, Math.min(this.maxSpreadRadius, v))
   }
 
+  setDrift(x, y) {
+    this.driftX = x
+    this.driftY = y
+  }
+
+  setRiseSpeed(v) {
+    this.riseSpeed = Math.max(0, v)
+  }
+
   /**
    * 设置碰撞体网格列表，让火焰粒子不穿模。
-   * 使用包围盒代理检测：粒子世界坐标进入任何碰撞体包围盒时立即重生。
+   * 使用包围盒代理检测：粒子世界坐标进入任何碰撞体包围盒时推到最近表面并减速，
+   * 不再重生，避免闪烁。
    * @param {THREE.Mesh[]} meshes
    */
   setCollision(meshes) {
@@ -226,8 +258,9 @@ export class FlameEffect {
       this.spreadRadius += Math.sign(diff) * Math.min(Math.abs(diff), this.spreadSpeed * dt)
     }
 
-    const jitter = Math.sin(elapsed * 8) * 0.1 + Math.cos(elapsed * 17) * 0.06
-    this.light.intensity = (this.intensity * 4) * (0.85 + jitter)
+    // 光源轻微脉动：极低频率和幅度，避免明显闪烁
+    const flicker = Math.sin(elapsed * 1.2) * 0.015
+    this.light.intensity = (this.intensity * 4) * (0.97 + flicker)
     // 光源范围随蔓延扩大
     this.light.distance = this.size * 10 * (1 + this.spreadRadius / Math.max(1, this.maxSpreadRadius))
 
@@ -248,31 +281,57 @@ export class FlameEffect {
       const z = this.positions[idx + 2]
 
       // 湍流：随高度和时间产生水平漂移，让火焰柱扭曲、更像真实火焰
-      const turbulence = 0.25 + this.spreadRadius / Math.max(1, this.maxSpreadRadius) * 0.35
-      this.velocities[idx] += (Math.sin(y * 2.5 + elapsed * 4 + i) * turbulence) * dt
-      this.velocities[idx + 2] += (Math.cos(y * 2.1 + elapsed * 3.2 + i * 0.7) * turbulence) * dt
+      // 项目坐标系 Z 竖直向上，高度为 z；降低湍流幅度避免粒子位置突变造成闪烁
+      const turbulence = 0.12 + this.spreadRadius / Math.max(1, this.maxSpreadRadius) * 0.18
+      this.velocities[idx] += (Math.sin(z * 1.8 + elapsed * 2.5 + i) * turbulence) * dt
+      this.velocities[idx + 1] += (Math.cos(z * 1.5 + elapsed * 2.0 + i * 0.7) * turbulence) * dt
 
       this.positions[idx] += this.velocities[idx] * dt
       this.positions[idx + 1] += this.velocities[idx + 1] * dt
       this.positions[idx + 2] += this.velocities[idx + 2] * dt
 
-      // 持续热力上升，但顶部减速，让粒子在顶部停留成烟
-      const buoyancy = 0.45 + jitter * 0.25
-      this.velocities[idx + 1] += buoyancy * dt
-      // 水平速度阻尼降低，让粒子更容易横向扩散到边界
-      this.velocities[idx] *= 1.0 - 0.25 * dt
-      this.velocities[idx + 2] *= 1.0 - 0.25 * dt
+      // 持续热力上升（Z 轴），但顶部减速，让粒子在顶部停留成烟
+      // 降低浮力，避免火焰过度向上窜；riseSpeed 可进一步降低竖直速度
+      const buoyancy = 0.18 * this.riseSpeed
+      this.velocities[idx + 2] += buoyancy * dt
+      // 水平速度向烟雾漂移方向趋近，让火焰随风倾斜；提高阻尼让运动更平滑
+      this.velocities[idx] += (this.driftX - this.velocities[idx]) * 0.5 * dt
+      this.velocities[idx + 1] += (this.driftY - this.velocities[idx + 1]) * 0.5 * dt
 
-      // 碰撞检测：粒子世界坐标进入碰撞体包围盒则重生该粒子
+      // 碰撞检测：粒子进入碰撞体时推到最近表面并减速，不再重生，避免闪烁
       if (hasCollision) {
-        const wx = this.positions[idx] + groupWorldPos.x
-        const wy = this.positions[idx + 1] + groupWorldPos.y
-        const wz = this.positions[idx + 2] + groupWorldPos.z
+        let wx = this.positions[idx] + groupWorldPos.x
+        let wy = this.positions[idx + 1] + groupWorldPos.y
+        let wz = this.positions[idx + 2] + groupWorldPos.z
         for (const box of this.collisionBoxes) {
-          if (wx >= box.min.x && wx <= box.max.x &&
-              wy >= box.min.y && wy <= box.max.y &&
-              wz >= box.min.z && wz <= box.max.z) {
-            this._respawnParticle(i)
+          if (
+            wx >= box.min.x && wx <= box.max.x &&
+            wy >= box.min.y && wy <= box.max.y &&
+            wz >= box.min.z && wz <= box.max.z
+          ) {
+            // 找到离哪个面最近，把粒子推到该面上
+            const dxMin = wx - box.min.x
+            const dxMax = box.max.x - wx
+            const dyMin = wy - box.min.y
+            const dyMax = box.max.y - wy
+            const dzMin = wz - box.min.z
+            const dzMax = box.max.z - wz
+            const minDist = Math.min(dxMin, dxMax, dyMin, dyMax, dzMin, dzMax)
+            if (minDist === dxMin) wx = box.min.x
+            else if (minDist === dxMax) wx = box.max.x
+            else if (minDist === dyMin) wy = box.min.y
+            else if (minDist === dyMax) wy = box.max.y
+            else if (minDist === dzMin) wz = box.min.z
+            else if (minDist === dzMax) wz = box.max.z
+
+            this.positions[idx] = wx - groupWorldPos.x
+            this.positions[idx + 1] = wy - groupWorldPos.y
+            this.positions[idx + 2] = wz - groupWorldPos.z
+
+            // 速度大幅衰减，让粒子沿墙面滑动而不是反复撞入
+            this.velocities[idx] *= 0.2
+            this.velocities[idx + 1] *= 0.2
+            this.velocities[idx + 2] *= 0.2
             break
           }
         }
@@ -281,17 +340,18 @@ export class FlameEffect {
       const ageRatio = Math.min(1, this.ages[i] / this.lifetimes[i])
       // 火焰高度随最大蔓延半径增长，避免大半径时粒子过早变烟
       const flameHeight = this.size * 3.5 + this.maxSpreadRadius * 0.35
-      const heightRatio = Math.min(1, Math.max(0, y / flameHeight))
+      const heightRatio = Math.min(1, Math.max(0, z / flameHeight))
 
       ageRatioAttr.array[i] = ageRatio
       heightRatioAttr.array[i] = heightRatio
 
       // 大小：底部出生略小，中部最大，顶部如烟变大但变淡
+      // 使用平滑曲线避免粒子忽大忽小造成闪烁
       const sizeCurve = Math.sin(ageRatio * Math.PI) // 0→1→0
-      const spreadScale = 1 + this.spreadRadius / Math.max(1, this.maxSpreadRadius) * 0.7
-      const heightScale = 1 + heightRatio * 0.5
+      const spreadScale = 1 + this.spreadRadius / Math.max(1, this.maxSpreadRadius) * 0.4
+      const heightScale = 1 + heightRatio * 0.25
       // 放大基础尺寸让粒子充分重叠，融合成连续火团而非离散粒子
-      this.sizes[i] = this.size * 1.1 * (0.5 + sizeCurve * 1.3) * spreadScale * heightScale
+      this.sizes[i] = this.size * 1.2 * (0.85 + sizeCurve * 0.5) * spreadScale * heightScale
     }
     this.geometry.attributes.position.needsUpdate = true
     this.geometry.attributes.size.needsUpdate = true
@@ -315,31 +375,35 @@ export class FlameEffect {
         this.ages[i] = Math.random() * this.lifetimes[i]
         // 让初始粒子分布到一定高度，避免第一帧全部挤在底部
         const flameHeight = this.size * 3.5 + this.maxSpreadRadius * 0.35
-        const y = this.positions[i * 3 + 1]
-        this.geometry.attributes.heightRatio.array[i] = Math.min(1, Math.max(0, y / flameHeight))
+        const z = this.positions[i * 3 + 2]
+        this.geometry.attributes.heightRatio.array[i] = Math.min(1, Math.max(0, z / flameHeight))
       }
     }
   }
 
   _respawnParticle(i) {
     const idx = i * 3
-    // 火焰蔓延：粒子在底部圆盘内生成，随上升向外扩散，形成柱状火区
+    // 火焰蔓延：粒子在底部椭圆盘内生成，长轴沿 spreadDirection，形成沿矿道方向的火区
     const effectiveSpread = Math.max(this.size * 0.18, this.spreadRadius * 0.85)
     const theta = Math.random() * Math.PI * 2
     // 圆盘内均匀分布：r^2 均匀，再开平方根
     const r = effectiveSpread * Math.sqrt(Math.random())
-    this.positions[idx] = r * Math.cos(theta)
-    // 底部略低，让火焰从地面/煤块表面升起
-    this.positions[idx + 1] = (Math.random() - 0.5) * this.size * 0.12
-    this.positions[idx + 2] = r * Math.sin(theta)
+    const along = r * this.spreadAnisotropy
+    const side = r * (1 - this.spreadAnisotropy)
+    const dir = this.spreadDirection
+    const perp = new THREE.Vector3(-dir.y, dir.x, 0)
+    this.positions[idx] = along * Math.cos(theta) * dir.x + side * Math.sin(theta) * perp.x
+    this.positions[idx + 1] = along * Math.cos(theta) * dir.y + side * Math.sin(theta) * perp.y
+    // 底部略低，让火焰从地面/煤块表面升起（Z 为高度）
+    this.positions[idx + 2] = (Math.random() - 0.5) * this.size * 0.12
 
-    // 初始速度：主要向上，带轻微水平随机
+    // 初始速度：降低竖直方向速度，让火焰更贴近地面/煤块表面蔓延
     const speed = 0.35 + Math.random() * 0.35
-    const angle = Math.random() * Math.PI * 2
-    const vr = 0.25 + Math.random() * 0.45
-    this.velocities[idx] = vr * Math.cos(angle) * speed
-    this.velocities[idx + 1] = (0.7 + Math.random() * 0.5) * speed
-    this.velocities[idx + 2] = vr * Math.sin(angle) * speed
+    const alongSpeed = (0.5 + Math.random() * 0.5) * speed
+    const sideSpeed = (0.1 + Math.random() * 0.25) * speed
+    this.velocities[idx] = this.driftX + alongSpeed * dir.x - sideSpeed * dir.y
+    this.velocities[idx + 1] = this.driftY + alongSpeed * dir.y + sideSpeed * dir.x
+    this.velocities[idx + 2] = (0.22 + Math.random() * 0.18) * speed * this.riseSpeed
 
     // 长寿命：底部新生粒子 6.0-10.0 秒；蔓延越大寿命越长，让粒子能到达边界
     this.lifetimes[i] = (6.0 + Math.random() * 4.0) * (1 + this.spreadRadius / Math.max(1, this.maxSpreadRadius) * 0.8)
@@ -457,7 +521,8 @@ export class ExplosionEffect {
       this.particlePos[idx] += this.particleVel[idx] * dt
       this.particlePos[idx + 1] += this.particleVel[idx + 1] * dt
       this.particlePos[idx + 2] += this.particleVel[idx + 2] * dt
-      this.particleVel[idx + 1] -= 2.0 * dt // 重力
+      // Z 竖直向上，重力沿 -Z
+      this.particleVel[idx + 2] -= 2.0 * dt
     }
     this.particleGeo.attributes.position.needsUpdate = true
     this.particleMat.opacity = inv
@@ -488,9 +553,10 @@ export class ExplosionEffect {
       const speed = 4 + Math.random() * 8
       const theta = Math.random() * Math.PI * 2
       const phi = Math.random() * Math.PI
+      // Z 竖直向上：cos(phi) 沿 Z 轴
       this.particleVel[idx] = speed * Math.sin(phi) * Math.cos(theta)
-      this.particleVel[idx + 1] = speed * Math.cos(phi)
-      this.particleVel[idx + 2] = speed * Math.sin(phi) * Math.sin(theta)
+      this.particleVel[idx + 1] = speed * Math.sin(phi) * Math.sin(theta)
+      this.particleVel[idx + 2] = speed * Math.cos(phi)
       this.particleLife[i] = 0.5 + Math.random() * 0.6
       this.particleAge[i] = 0
     }
@@ -725,8 +791,8 @@ export class FireballEffect {
       this.trailPos[idx] += this.trailVel[idx] * dt
       this.trailPos[idx + 1] += this.trailVel[idx + 1] * dt
       this.trailPos[idx + 2] += this.trailVel[idx + 2] * dt
-      // 浮力始终沿世界 Y 轴向上，与火球运动方向解耦
-      this.trailVel[idx + 1] += 1.2 * dt
+      // 浮力始终沿世界 Z 轴向上（项目坐标系 Z 竖直向上）
+      this.trailVel[idx + 2] += 1.2 * dt
       // 阻尼（帧率无关：每秒衰减到 50%）
       const damping = Math.pow(0.5, dt)
       this.trailVel[idx] *= damping
@@ -751,11 +817,11 @@ export class FireballEffect {
     this.trailPos[idx] = this.group.position.x + (Math.random() - 0.5) * r
     this.trailPos[idx + 1] = this.group.position.y + (Math.random() - 0.5) * r
     this.trailPos[idx + 2] = this.group.position.z + (Math.random() - 0.5) * r
-    // 速度：反方向拖尾 + 世界向上浮力 + 随机扰动
+    // 速度：反方向拖尾 + 世界向上浮力（Z 轴） + 随机扰动
     const back = 0.8
     this.trailVel[idx] = -this.direction.x * back + (Math.random() - 0.5) * 1.5
-    this.trailVel[idx + 1] = -this.direction.y * back + (Math.random() - 0.5) * 1.5 + 0.9
-    this.trailVel[idx + 2] = -this.direction.z * back + (Math.random() - 0.5) * 1.5
+    this.trailVel[idx + 1] = -this.direction.y * back + (Math.random() - 0.5) * 1.5
+    this.trailVel[idx + 2] = -this.direction.z * back + (Math.random() - 0.5) * 1.5 + 0.9
     this.trailAge[i] = 0
     this.trailLife[i] = 1.0 + Math.random() * 0.8
     this.trailSize[i] = this.radius * (0.7 + Math.random() * 0.6)

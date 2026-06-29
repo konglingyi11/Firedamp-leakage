@@ -57,6 +57,9 @@ export class CoalFlameEffect {
     this.position = options.position?.clone?.() || new THREE.Vector3(0, 0, 0)
     this.count = options.count || 80
     this.scene = options.scene || null
+    // 烟雾/瓦斯水平漂移速度，火焰会随风向倾斜
+    this.driftX = options.driftX ?? 0
+    this.driftY = options.driftY ?? 0
     this.texture = createFlameTexture()
 
     this.geometry = new THREE.BufferGeometry()
@@ -141,7 +144,8 @@ export class CoalFlameEffect {
     if (this.scene) this.scene.add(this.mesh)
 
     this.light = new THREE.PointLight(0xff6600, 0, 14)
-    this.light.position.copy(this.position).add(new THREE.Vector3(0, 0.6, 0))
+    // 项目坐标系 Z 竖直向上
+    this.light.position.copy(this.position).add(new THREE.Vector3(0, 0, 0.6))
     if (this.scene) this.scene.add(this.light)
 
     this.elapsed = 0
@@ -154,23 +158,29 @@ export class CoalFlameEffect {
     this.material.uniforms.uGlobalAlpha.value = this.intensity
   }
 
+  setDrift(x, y) {
+    this.driftX = x
+    this.driftY = y
+  }
+
   setPosition(x, y, z) {
     this.position.set(x, y, z)
     this.mesh.position.set(x, y, z)
-    this.light.position.set(x, y + 0.6, z)
+    this.light.position.set(x, y, z + 0.6)
   }
 
   _resetParticle(i, elapsed) {
     const angle = Math.random() * Math.PI * 2
     const r = Math.random() * 0.18
+    // Z 竖直向上：XY 平面水平扩散，Z 为高度
     this.positions[i * 3] = Math.cos(angle) * r
-    this.positions[i * 3 + 1] = Math.random() * 0.12
-    this.positions[i * 3 + 2] = Math.sin(angle) * r
+    this.positions[i * 3 + 1] = Math.sin(angle) * r
+    this.positions[i * 3 + 2] = Math.random() * 0.12
 
     const speed = 0.45 + Math.random() * 0.8
-    this.velocities[i * 3] = (Math.random() - 0.5) * 0.18
-    this.velocities[i * 3 + 1] = speed
-    this.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.18
+    this.velocities[i * 3] = this.driftX + (Math.random() - 0.5) * 0.18
+    this.velocities[i * 3 + 1] = this.driftY + (Math.random() - 0.5) * 0.18
+    this.velocities[i * 3 + 2] = speed
 
     this.lifetimes[i] = 0.38 + Math.random() * 0.55
     this.startTimes[i] = elapsed
@@ -199,9 +209,9 @@ export class CoalFlameEffect {
       this.positions[i * 3 + 1] += this.velocities[i * 3 + 1] * delta
       this.positions[i * 3 + 2] += this.velocities[i * 3 + 2] * delta
 
-      this.velocities[i * 3] += (Math.random() - 0.5) * 0.10 * delta
-      this.velocities[i * 3 + 2] += (Math.random() - 0.5) * 0.10 * delta
-      this.velocities[i * 3 + 1] *= 1.0 - 0.25 * delta
+      this.velocities[i * 3] += (this.driftX - this.velocities[i * 3]) * 0.5 * delta + (Math.random() - 0.5) * 0.10 * delta
+      this.velocities[i * 3 + 1] += (this.driftY - this.velocities[i * 3 + 1]) * 0.5 * delta + (Math.random() - 0.5) * 0.10 * delta
+      this.velocities[i * 3 + 2] *= 1.0 - 0.25 * delta
 
       this.sizes[i] = (0.32 + t * 0.95) * (1.0 + this.intensity * 0.5)
       this.alphas[i] = (1.0 - t * t) * flicker

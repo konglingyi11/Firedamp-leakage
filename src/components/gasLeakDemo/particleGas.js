@@ -88,16 +88,18 @@ export function createParticleGasSystem(crackPositions, collisionMeshes, parentG
     }
   })
 
-  // 速度场：让瓦斯整体向巷道入口快速漂移并略有上升
+  // 速度场：让瓦斯整体向巷道入口快速漂移并明显上升
   const velocityField = {
     worldScale: 10,
-    strength: 1.0,
-    stride: 3,
+    strength: 1.2,
+    stride: 2,
     sample: (pos) => {
       // pos 是归一化场坐标 (x,y,z)
+      // 高度越高浮力越强，瓦斯在上部积聚更显著
+      // SmokeSystem 内部语义：vy = 向上轴（世界 Z），vx/vz = 水平轴
       return {
         vx: -0.55 + pos[1] * 0.15,
-        vy: 0.14 + pos[0] * 0.10,
+        vy: 0.25 + pos[0] * 0.10 + Math.max(0.0, pos[1]) * 0.15,
         vz: Math.sin(pos[0] * 3.0) * 0.08,
         speed: 1.0,
       }
@@ -109,6 +111,8 @@ export function createParticleGasSystem(crackPositions, collisionMeshes, parentG
     texture,
     parentGroup,
     {
+      // Demo 场景同样使用 Z 轴竖直向上
+      upAxis: [0, 0, 1],
       size: 3.6,
       speed: 1.05,
       range: 1.0,

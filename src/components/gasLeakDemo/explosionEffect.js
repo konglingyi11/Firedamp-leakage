@@ -369,14 +369,15 @@ export class ExplosionEffect {
         side: THREE.DoubleSide,
       }),
     )
-    this._shockRing.rotation.x = -Math.PI / 2
-    this._shockRing.position.y = 0.05
+    // Z 竖直向上，地面环在 XY 平面，无需绕 X 旋转
+    this._shockRing.position.z = 0.05
     this._shockRing.renderOrder = 8
     this._group.add(this._shockRing)
 
     // ---- 闪光灯 ----
     this._light = new THREE.PointLight(0xffb060, 0, 40, 2)
-    this._light.position.set(0, 1.2, 0)
+    // Z 竖直向上
+    this._light.position.set(0, 0, 1.2)
     this._group.add(this._light)
 
     // ---- 余烬粒子（白热→暗红）----
@@ -553,10 +554,10 @@ export class ExplosionEffect {
       // 膨胀：初期快、后期慢（指数缓出）
       const ease = 1 - Math.exp(-ft * 3.2)
       const radius = (0.5 + ease * 3.6) * this._intensity * this._scale
-      // 蘑菇式：竖直方向略大
-      this._fireball.scale.set(radius * 0.95, radius * 1.15, radius * 0.95)
-      // 上升
-      this._fireball.position.y = ft * 1.8 * this._intensity * this._scale
+      // 蘑菇式：竖直方向（Z）略大
+      this._fireball.scale.set(radius * 0.95, radius * 0.95, radius * 1.15)
+      // 上升（Z 轴）
+      this._fireball.position.z = ft * 1.8 * this._intensity * this._scale
     } else {
       this._fireball.visible = false
     }
@@ -661,7 +662,7 @@ export class ExplosionEffect {
     this._smoke.visible = false
     this._light.intensity = 0
     this._shakeOffset.set(0, 0, 0)
-    this._fireball.position.y = 0
+    this._fireball.position.z = 0
   }
 
   _resetEmbers() {
@@ -674,9 +675,10 @@ export class ExplosionEffect {
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
       const speed = (2.8 + Math.random() * 7) * this._intensity * this._scale
+      // Z 竖直向上：初始速度以 Z 为主
       this._emberVelocities[idx] = Math.sin(phi) * Math.cos(theta) * speed
-      this._emberVelocities[idx + 1] = (Math.cos(phi) + 0.35) * speed
-      this._emberVelocities[idx + 2] = Math.sin(phi) * Math.sin(theta) * speed
+      this._emberVelocities[idx + 1] = Math.sin(phi) * Math.sin(theta) * speed
+      this._emberVelocities[idx + 2] = (Math.cos(phi) + 0.35) * speed
 
       this._emberLifetimes[i] = 0.7 + Math.random() * 1.7
       this._emberAges[i] = 0
@@ -710,7 +712,8 @@ export class ExplosionEffect {
       this._emberPositions[idx] += this._emberVelocities[idx] * dt
       this._emberPositions[idx + 1] += this._emberVelocities[idx + 1] * dt
       this._emberPositions[idx + 2] += this._emberVelocities[idx + 2] * dt
-      this._emberVelocities[idx + 1] += gravity * dt
+      // Z 竖直向上，重力沿 -Z
+      this._emberVelocities[idx + 2] += gravity * dt
       const drag = 1 - 0.55 * dt
       this._emberVelocities[idx] *= drag
       this._emberVelocities[idx + 1] *= drag
@@ -749,15 +752,16 @@ export class ExplosionEffect {
       // 从爆炸中心一个小球内生成
       const r = Math.random() * 0.4
       const a = Math.random() * Math.PI * 2
+      // Z 竖直向上：XY 水平，Z 为高度
       this._smokePositions[idx] = Math.cos(a) * r
-      this._smokePositions[idx + 1] = Math.random() * 0.3
-      this._smokePositions[idx + 2] = Math.sin(a) * r
+      this._smokePositions[idx + 1] = Math.sin(a) * r
+      this._smokePositions[idx + 2] = Math.random() * 0.3
 
-      // 主要向上喷射 + 少量横向扩散
+      // 主要向上喷射（Z 轴） + 少量横向扩散
       const upward = (2.8 + Math.random() * 2.2) * this._scale
       this._smokeVelocities[idx] = (Math.random() - 0.5) * 0.9
-      this._smokeVelocities[idx + 1] = upward
-      this._smokeVelocities[idx + 2] = (Math.random() - 0.5) * 0.9
+      this._smokeVelocities[idx + 1] = (Math.random() - 0.5) * 0.9
+      this._smokeVelocities[idx + 2] = upward
 
       this._smokeLifetimes[i] = 3.5 + Math.random() * 2.0
       this._smokeAges[i] = 0
@@ -795,14 +799,14 @@ export class ExplosionEffect {
       }
       anyAlive = true
 
-      // 横向湍流：低频摆动，越往上摆动越强
-      const heightFactor = 0.5 + this._smokePositions[idx + 1] * 0.15
+      // 横向湍流：低频摆动，越往上摆动越强（Z 为高度）
+      const heightFactor = 0.5 + this._smokePositions[idx + 2] * 0.15
       const sway = Math.sin(this._elapsed * 1.6 + i * 0.7) * 0.5 * heightFactor * dt
       const sway2 = Math.cos(this._elapsed * 1.3 + i * 0.5) * 0.5 * heightFactor * dt
       this._smokeVelocities[idx] += sway
-      this._smokeVelocities[idx + 2] += sway2
+      this._smokeVelocities[idx + 1] += sway2
       // 上升减速（浮力衰减）
-      this._smokeVelocities[idx + 1] *= 1 - 0.22 * dt
+      this._smokeVelocities[idx + 2] *= 1 - 0.22 * dt
 
       this._smokePositions[idx] += this._smokeVelocities[idx] * dt
       this._smokePositions[idx + 1] += this._smokeVelocities[idx + 1] * dt

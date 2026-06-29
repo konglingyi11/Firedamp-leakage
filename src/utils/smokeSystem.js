@@ -1,6 +1,27 @@
 import * as THREE from 'three'
 
-const UP_NORMAL = new THREE.Vector3(0, 1, 0)
+function resolveUpAxis(runtimeParams) {
+  const axis = runtimeParams?.upAxis
+  if (Array.isArray(axis) && axis.length >= 3) {
+    const v = new THREE.Vector3(axis[0], axis[1], axis[2]).normalize()
+    if (v.lengthSq() > 0.001) return v
+  }
+  if (axis instanceof THREE.Vector3) {
+    return axis.clone().normalize()
+  }
+  return new THREE.Vector3(0, 1, 0)
+}
+
+function getUpAxisIndex(up) {
+  const x = Math.abs(up.x)
+  const y = Math.abs(up.y)
+  const z = Math.abs(up.z)
+  if (z >= x && z >= y) return 2
+  if (x >= y && x >= z) return 0
+  return 1
+}
+
+const DEFAULT_UP_NORMAL = new THREE.Vector3(0, 1, 0)
 
 export function createSmokeTexture() {
   const size = 256
@@ -12,26 +33,26 @@ export function createSmokeTexture() {
 
   ctx.clearRect(0, 0, size, size)
 
-  // 主渐变：核心高 alpha，边缘极缓慢衰减，让粒子边缘大范围重叠融合成雾
+  // 主渐变：核心透明度降低、边缘极缓慢衰减，让单个粒子更透明、重叠后才成雾
   const base = ctx.createRadialGradient(cx, cx, 0, cx, cx, cx)
-  base.addColorStop(0, 'rgba(255,255,255,0.9)')
-  base.addColorStop(0.2, 'rgba(255,255,255,0.7)')
-  base.addColorStop(0.5, 'rgba(255,255,255,0.45)')
-  base.addColorStop(0.8, 'rgba(255,255,255,0.18)')
+  base.addColorStop(0, 'rgba(255,255,255,0.42)')
+  base.addColorStop(0.3, 'rgba(255,255,255,0.32)')
+  base.addColorStop(0.6, 'rgba(255,255,255,0.18)')
+  base.addColorStop(0.85, 'rgba(255,255,255,0.06)')
   base.addColorStop(1, 'rgba(255,255,255,0)')
   ctx.fillStyle = base
   ctx.fillRect(0, 0, size, size)
 
   // 叠加更多随机软斑块，让贴图不规则、更像真实烟雾
   ctx.globalCompositeOperation = 'lighter'
-  for (let b = 0; b < 16; b++) {
-    const bx = cx + (Math.random() - 0.5) * size * 0.4
-    const by = cx + (Math.random() - 0.5) * size * 0.4
-    const br = size * (0.12 + Math.random() * 0.25)
-    const alpha = 0.08 + Math.random() * 0.12
+  for (let b = 0; b < 28; b++) {
+    const bx = cx + (Math.random() - 0.5) * size * 0.6
+    const by = cx + (Math.random() - 0.5) * size * 0.6
+    const br = size * (0.15 + Math.random() * 0.32)
+    const alpha = 0.06 + Math.random() * 0.10
     const grad = ctx.createRadialGradient(bx, by, 0, bx, by, br)
     grad.addColorStop(0, `rgba(255,255,255,${alpha})`)
-    grad.addColorStop(0.5, `rgba(255,255,255,${alpha * 0.3})`)
+    grad.addColorStop(0.45, `rgba(255,255,255,${alpha * 0.35})`)
     grad.addColorStop(1, 'rgba(255,255,255,0)')
     ctx.fillStyle = grad
     ctx.beginPath()
@@ -66,16 +87,22 @@ function buildFragmentShader() {
         uv += 0.5;
 
         vec4 texColor = texture2D(uTexture, uv);
-        // 密度基于贴图 alpha，用更陡的曲线让边缘更柔和、核心更实
-        float density = pow(texColor.a, 1.2);
+
+        // 用随机值破坏规则圆形，让不同粒子边缘形状不同
+        float d = length(uv - 0.5) * 2.0;
+        float edge = 0.45 + vRandom.y * 0.4;
+        float shape = 1.0 - smoothstep(edge * 0.5, edge, d);
+
+        // 密度核心更透、边缘更软，整体 alpha 压低，靠重叠融合成雾
+        float density = pow(texColor.a, 1.6) * shape;
         vec3 smokeColor = mix(uScatter, uAbsorb, density);
         smokeColor = mix(smokeColor, vColor, 0.35);
         // 降低亮度避免反光感
-        smokeColor *= 0.82;
-        // alpha 随密度衰减更自然，边缘更软
-        float alpha = density * vAlpha * uDensity;
-        if (alpha < 0.003) discard;
-        gl_FragColor = vec4(smokeColor, alpha);
+        smokeColor *= 0.78;
+        float alpha = density * vAlpha * uDensity * 0.5;
+        if (alpha < 0.001) discard;
+        // 预乘 alpha，配合 One / OneMinusSrcAlpha 混合，边缘更自然
+        gl_FragColor = vec4(smokeColor * alpha, alpha);
       }
     `
 }
@@ -86,6 +113,8 @@ export class SmokeSystem {
     this.texture = texture
     this.scene = scene
     this.params = runtimeParams
+    this.upAxis = resolveUpAxis(runtimeParams)
+    this.upAxisIndex = getUpAxisIndex(this.upAxis)
     this.maxLifetime = runtimeParams.maxLifetime ?? 18
     this.spawnDuration = runtimeParams.spawnDuration ?? 0
     this.firstUpdate = true // 首帧时根据真实 elapsed 重新分配 startTime
@@ -179,13 +208,13 @@ export class SmokeSystem {
         float lifeRatio = clamp(vAge / lifetime, 0.0, 1.0);
         // 淡入基于绝对秒数（1.5 秒），不受 lifetime 影响；淡出仍按寿命比例
         vAlpha = smoothstep(0.0, 1.5, vAge)
-               * (1.0 - smoothstep(0.6, 1.0, lifeRatio));
+               * (1.0 - smoothstep(0.7, 1.0, lifeRatio));
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mvPosition;
-        // 尺寸：持续增长到寿命 60%，让粒子随扩散变大变淡融合成雾
-        float sizeOverLife = size * mix(0.5, 2.8, smoothstep(0.0, 0.6, lifeRatio))
+        // 尺寸：持续增长到寿命 70%，让粒子随扩散变大变淡融合成雾
+        float sizeOverLife = size * mix(0.6, 3.2, smoothstep(0.0, 0.7, lifeRatio))
                              * (1.0 - smoothstep(0.95, 1.0, lifeRatio) * 0.3);
-        gl_PointSize = sizeOverLife * (280.0 / -mvPosition.z);
+        gl_PointSize = sizeOverLife * (300.0 / -mvPosition.z);
       }
     `
 
@@ -195,7 +224,11 @@ export class SmokeSystem {
       uniforms: this.uniforms,
       transparent: true,
       depthWrite: false,
-      blending: THREE.NormalBlending,
+      // 预乘 alpha + One/OneMinusSrcAlpha，避免 NormalBlending 产生的黑边/圆斑感
+      blending: THREE.CustomBlending,
+      blendSrc: THREE.OneFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor,
+      blendEquation: THREE.AddEquation,
     })
 
     this.mesh = new THREE.Points(this.geometry, this.material)
@@ -257,37 +290,42 @@ export class SmokeSystem {
 
     // 提高初始上升速度，让瓦斯更快向上扩散
     const upwardSpeed = surfaceSeed
-      ? (0.08 + Math.random() * 0.08) * p.speed
+      ? (0.18 + Math.random() * 0.12) * p.speed
       : gridSeed
-      ? (0.006 + Math.random() * 0.018) * p.speed
-      : (0.08 + Math.random() * 0.08) * p.speed
+      ? (0.012 + Math.random() * 0.028) * p.speed
+      : (0.18 + Math.random() * 0.12) * p.speed
     const spreadSpeed = surfaceSeed
       ? (0.04 + Math.random() * 0.05) * p.range
       : gridSeed
       ? (0.003 + Math.random() * 0.006) * p.range
       : (0.04 + Math.random() * 0.05) * p.range
 
+    // upAxisIndex 指定世界坐标中的“向上”轴；其余两轴为水平面
+    const upIdx = this.upAxisIndex
+    const hIdx1 = (upIdx + 1) % 3
+    const hIdx2 = (upIdx + 2) % 3
+
     const nx = surfaceSeed?.nx ?? 0
     const ny = surfaceSeed?.ny ?? 1
     const nz = surfaceSeed?.nz ?? 0
     if (surfaceSeed) {
-      // 三轴均匀扩散，Y 轴抖动单独缩小，让 ny 方向（含正负）主导
+      // ny 语义上代表“向上”分量，nx/nz 为水平分量；根据 upAxisIndex 写入对应轴
       const baseSpeed = upwardSpeed * (0.8 + Math.random() * 0.4)
-      this.velocities[i * 3] =
+      this.velocities[i * 3 + hIdx1] =
         nx * baseSpeed + (Math.random() - 0.5) * spreadSpeed
-      this.velocities[i * 3 + 1] =
-        ny * baseSpeed + (Math.random() - 0.5) * upwardSpeed * 0.2
-      this.velocities[i * 3 + 2] =
+      this.velocities[i * 3 + upIdx] =
+        ny * baseSpeed * 1.25 + (Math.random() - 0.5) * upwardSpeed * 0.2
+      this.velocities[i * 3 + hIdx2] =
         nz * baseSpeed + (Math.random() - 0.5) * spreadSpeed
     } else {
       // 球面均匀向外扩散：随机三维方向 + 上升
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos(2 * Math.random() - 1)
-      this.velocities[i * 3] =
+      this.velocities[i * 3 + hIdx1] =
         Math.sin(phi) * Math.cos(theta) * spreadSpeed
-      this.velocities[i * 3 + 1] =
-        upwardSpeed * 0.5 + Math.cos(phi) * spreadSpeed
-      this.velocities[i * 3 + 2] =
+      this.velocities[i * 3 + upIdx] =
+        upwardSpeed * 1.2 + Math.cos(phi) * spreadSpeed
+      this.velocities[i * 3 + hIdx2] =
         Math.sin(phi) * Math.sin(theta) * spreadSpeed
     }
 
@@ -298,12 +336,12 @@ export class SmokeSystem {
 
     const seedValue = Math.max(0, Math.min(1, Number(gridSeed?.value) || 0))
     const roll = Math.random()
-    if (roll > 0.85) {
-      this.sizes[i] = (6.0 + Math.random() * 3.0) * p.size
-    } else if (roll > 0.35) {
-      this.sizes[i] = (3.5 + Math.random() * 2.5) * p.size
+    if (roll > 0.8) {
+      this.sizes[i] = (7.5 + Math.random() * 3.5) * p.size
+    } else if (roll > 0.3) {
+      this.sizes[i] = (5.0 + Math.random() * 3.0) * p.size
     } else {
-      this.sizes[i] = (2.0 + Math.random() * 1.8) * p.size
+      this.sizes[i] = (3.0 + Math.random() * 2.0) * p.size
     }
     if (gridSeed) {
       this.sizes[i] *= 0.65 + seedValue * 0.9
@@ -329,6 +367,10 @@ export class SmokeSystem {
     this.surfaceSeeds = Array.isArray(this.params.emitter?.surfaceSeeds)
       ? this.params.emitter.surfaceSeeds
       : null
+    if (runtimeParams.upAxis != null) {
+      this.upAxis = resolveUpAxis(this.params)
+      this.upAxisIndex = getUpAxisIndex(this.upAxis)
+    }
     if (runtimeParams.maxLifetime != null) {
       this.maxLifetime = runtimeParams.maxLifetime
     }
@@ -368,14 +410,21 @@ export class SmokeSystem {
   }
 
   toFieldPosition(fieldParams, x, y, z) {
-    const ex = this.params.emitter?.position?.[0] ?? 0
-    const ey = this.params.emitter?.position?.[1] ?? -0.3
-    const ez = this.params.emitter?.position?.[2] ?? 0
+    const emit = this.params.emitter?.position ?? [0, -0.3, 0]
+    const ex = emit[0] ?? 0
+    const ey = emit[1] ?? -0.3
+    const ez = emit[2] ?? 0
     const scale = Math.max(0.001, Number(fieldParams.worldScale) || 10)
+    const world = [x, y, z]
+    const emitter = [ex, ey, ez]
+    const upIdx = this.upAxisIndex
+    const hIdx1 = (upIdx + 1) % 3
+    const hIdx2 = (upIdx + 2) % 3
+    // 将世界坐标的“向上”轴映射到标量场/速度场的 y 轴
     return [
-      (x - ex) / scale,
-      (y - ey) / scale - 0.5,
-      (z - ez) / scale,
+      (world[hIdx1] - emitter[hIdx1]) / scale,
+      (world[upIdx] - emitter[upIdx]) / scale - 0.5,
+      (world[hIdx2] - emitter[hIdx2]) / scale,
     ]
   }
 
@@ -451,17 +500,55 @@ export class SmokeSystem {
         if (hit) break
       }
     }
-    if (!hit) return false
+    const restitution = Math.max(0, Math.min(1, Number(collision.restitution) ?? 0.18))
+    const slide = Math.max(0, Math.min(1, Number(collision.slide) ?? 0.72))
 
-    this.hitNormal.copy(hit.face?.normal || UP_NORMAL)
+    if (!hit) {
+      // 射线未命中时仍做“点在包围盒内”兜底：防止薄煤层/土层在帧间隔内被穿透
+      for (const mesh of meshes) {
+        const box = mesh.userData?.collisionBox
+        if (box && !box.isEmpty()) {
+          this.collisionCandidateBox.copy(box)
+        } else {
+          this.collisionCandidateBox.setFromObject(mesh)
+        }
+        if (this.collisionCandidateBox.containsPoint(next)) {
+          const center = new THREE.Vector3()
+          this.collisionCandidateBox.getCenter(center)
+          const dx = Math.min(next.x - this.collisionCandidateBox.min.x, this.collisionCandidateBox.max.x - next.x)
+          const dy = Math.min(next.y - this.collisionCandidateBox.min.y, this.collisionCandidateBox.max.y - next.y)
+          const dz = Math.min(next.z - this.collisionCandidateBox.min.z, this.collisionCandidateBox.max.z - next.z)
+          let push = dx
+          this.hitNormal.set(next.x >= center.x ? 1 : -1, 0, 0)
+          if (dy < push) {
+            push = dy
+            this.hitNormal.set(0, next.y >= center.y ? 1 : -1, 0)
+          }
+          if (dz < push) {
+            push = dz
+            this.hitNormal.set(0, 0, next.z >= center.z ? 1 : -1)
+          }
+          next.addScaledVector(this.hitNormal, push + radius)
+          const normalSpeed = velocity.dot(this.hitNormal)
+          if (normalSpeed < 0) {
+            const bounce = collision.blockNormalVelocity ? 1 : 1 + restitution
+            velocity.addScaledVector(this.hitNormal, -bounce * normalSpeed)
+          }
+          velocity.multiplyScalar(slide)
+          next.addScaledVector(velocity, Math.max(0, delta) * 0.25)
+          return true
+        }
+      }
+      return false
+    }
+
+    this.hitNormal.copy(hit.face?.normal || DEFAULT_UP_NORMAL)
     this.normalMatrix.getNormalMatrix(hit.object.matrixWorld)
     this.hitNormal.applyNormalMatrix(this.normalMatrix).normalize()
     if (this.hitNormal.dot(this.rayDirection) > 0) {
       this.hitNormal.multiplyScalar(-1)
     }
 
-    const restitution = Math.max(0, Math.min(1, Number(collision.restitution) ?? 0.18))
-    const slide = Math.max(0, Math.min(1, Number(collision.slide) ?? 0.72))
     const normalSpeed = velocity.dot(this.hitNormal)
     if (normalSpeed < 0) {
       const bounce = collision.blockNormalVelocity ? 1 : 1 + restitution
@@ -521,36 +608,49 @@ export class SmokeSystem {
       }
 
       const t = age / lifetime
-      const currentY = this.positions[i * 3 + 1]
+      const upIdx = this.upAxisIndex
+      const hIdx1 = (upIdx + 1) % 3
+      const hIdx2 = (upIdx + 2) % 3
+      const pUp = i * 3 + upIdx
+      const pH1 = i * 3 + hIdx1
+      const pH2 = i * 3 + hIdx2
+      const vUp = i * 3 + upIdx
+      const vH1 = i * 3 + hIdx1
+      const vH2 = i * 3 + hIdx2
+      const currentUp = this.positions[pUp]
 
       const brownian = 0.02 * p.swirl
-      this.velocities[i * 3] += (Math.random() - 0.5) * brownian * delta
-      this.velocities[i * 3 + 2] += (Math.random() - 0.5) * brownian * delta
-      this.velocities[i * 3 + 1] += (Math.random() - 0.5) * brownian * delta
+      this.velocities[pH1] += (Math.random() - 0.5) * brownian * delta
+      this.velocities[pH2] += (Math.random() - 0.5) * brownian * delta
+      this.velocities[pUp] += (Math.random() - 0.5) * brownian * delta
 
-      // 三维漩涡切向力：让烟雾在 X/Y/Z 三个轴向上都有旋转扩散
+      // 三维漩涡切向力：让烟雾在三个轴向上都有旋转扩散
       const swirlStrength = 0.02 * p.swirl * (1.0 - t * 0.5)
-      const dx = this.positions[i * 3]
-      const dy = this.positions[i * 3 + 1]
-      const dz = this.positions[i * 3 + 2]
-      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.1
-      // 绕 Y 轴的水平涡流
-      this.velocities[i * 3] += (-dz / dist) * swirlStrength * delta
-      this.velocities[i * 3 + 2] += (dx / dist) * swirlStrength * delta
-      // 增加绕 X/Z 轴的竖直涡流分量，使扩散在三个轴向上都更明显
-      this.velocities[i * 3] += (-dy / dist) * swirlStrength * 0.6 * delta
-      this.velocities[i * 3 + 1] += ((dx - dz) / dist) * swirlStrength * 0.6 * delta
-      this.velocities[i * 3 + 2] += (dy / dist) * swirlStrength * 0.6 * delta
+      const d1 = this.positions[pH1]
+      const d2 = this.positions[pH2]
+      const du = this.positions[pUp]
+      const dist = Math.sqrt(d1 * d1 + d2 * d2 + du * du) + 0.1
+      // 绕“向上”轴的水平涡流
+      this.velocities[pH1] += (-d2 / dist) * swirlStrength * delta
+      this.velocities[pH2] += (d1 / dist) * swirlStrength * delta
+      // 附加的竖直涡流分量
+      this.velocities[pH1] += (-du / dist) * swirlStrength * 0.6 * delta
+      this.velocities[pUp] += ((d1 - d2) / dist) * swirlStrength * 0.6 * delta
+      this.velocities[pH2] += (du / dist) * swirlStrength * 0.6 * delta
       // 径向向外扩散力：适度水平蔓延，同时避免过度分散，利于顶部积聚
       const radialStrength = 0.012 * p.range * (1.0 - t * 0.3)
-      this.velocities[i * 3] += (dx / dist) * radialStrength * delta
-      this.velocities[i * 3 + 2] += (dz / dist) * radialStrength * delta
-      // 浮力：明显上升趋势，让瓦斯在上部快速积聚
-      const buoyancy = 0.015 * (p.speed || 0.2) * (1.0 - t * 0.4)
-      this.velocities[i * 3 + 1] += buoyancy * delta
+      this.velocities[pH1] += (d1 / dist) * radialStrength * delta
+      this.velocities[pH2] += (d2 / dist) * radialStrength * delta
+      // 浮力：沿 upAxis 明显上升，让瓦斯在上部快速积聚
+      // 随高度增加浮力，顶部积聚效果更显著
+      const emitterUp = (p.emitter?.position?.[upIdx] ?? 0)
+      const heightFactor = 1.0 + Math.max(0.0, currentUp - emitterUp) * 0.25
+      // 浮力系数：进一步降低整体上升速度
+      const buoyancy = 0.01 * (p.speed || 0.2) * heightFactor * (1.0 - t * 0.3)
+      this.velocities[vUp] += buoyancy * delta
 
-      const swayX = Math.sin(elapsed * 0.2 + i * 0.13) * 0.003 * p.swirl
-      const swayZ = Math.cos(elapsed * 0.15 + i * 0.19) * 0.003 * p.swirl
+      const swayH1 = Math.sin(elapsed * 0.2 + i * 0.13) * 0.003 * p.swirl
+      const swayH2 = Math.cos(elapsed * 0.15 + i * 0.19) * 0.003 * p.swirl
 
       if (
         velocityField?.sample &&
@@ -564,9 +664,10 @@ export class SmokeSystem {
         ))
         const strength = Number(velocityField.strength) || 0
         if ((Number(sample.speed) || 0) > 1e-12) {
-          this.velocities[i * 3] += sample.vx * strength * delta
-          this.velocities[i * 3 + 1] += sample.vy * strength * delta
-          this.velocities[i * 3 + 2] += sample.vz * strength * delta
+          // 速度场 vy 语义为“向上”分量，根据 upAxisIndex 写入对应轴
+          this.velocities[vH1] += sample.vx * strength * delta
+          this.velocities[vUp] += sample.vy * strength * delta
+          this.velocities[vH2] += sample.vz * strength * delta
         }
       }
 
@@ -575,11 +676,15 @@ export class SmokeSystem {
         this.positions[i * 3 + 1],
         this.positions[i * 3 + 2],
       )
-      this.nextPosition.set(
-        this.positions[i * 3] + this.velocities[i * 3] * delta + swayX,
-        this.positions[i * 3 + 1] + this.velocities[i * 3 + 1] * delta,
-        this.positions[i * 3 + 2] + this.velocities[i * 3 + 2] * delta + swayZ,
-      )
+      const nextH1 = this.positions[pH1] + this.velocities[vH1] * delta + swayH1
+      const nextH2 = this.positions[pH2] + this.velocities[vH2] * delta + swayH2
+      const nextUp = this.positions[pUp] + this.velocities[vUp] * delta
+      const nextArr = [0, 0, 0]
+      nextArr[hIdx1] = nextH1
+      nextArr[hIdx2] = nextH2
+      nextArr[upIdx] = nextUp
+      this.nextPosition.set(nextArr[0], nextArr[1], nextArr[2])
+
       const shouldResolveCollision =
         hasCollision && (i + this.frameIndex) % collisionStride === 0
       if (shouldResolveCollision) {
@@ -604,12 +709,19 @@ export class SmokeSystem {
 
       // 边界检测：粒子超出模型包围盒（带余量）则重生，让烟雾在尽头消失
       if (bounds) {
-        const px = this.positions[i * 3]
-        const py = this.positions[i * 3 + 1]
-        const pz = this.positions[i * 3 + 2]
-        if (px < bounds.min.x - boundsMargin || px > bounds.max.x + boundsMargin ||
-            py < bounds.min.y - boundsMargin || py > bounds.max.y + boundsMargin ||
-            pz < bounds.min.z - boundsMargin || pz > bounds.max.z + boundsMargin) {
+        const pArr = [
+          this.positions[i * 3],
+          this.positions[i * 3 + 1],
+          this.positions[i * 3 + 2],
+        ]
+        const pUpAxis = pArr[upIdx]
+        const pH1Axis = pArr[hIdx1]
+        const pH2Axis = pArr[hIdx2]
+        const bMin = [bounds.min.x, bounds.min.y, bounds.min.z]
+        const bMax = [bounds.max.x, bounds.max.y, bounds.max.z]
+        if (pH1Axis < bMin[hIdx1] - boundsMargin || pH1Axis > bMax[hIdx1] + boundsMargin ||
+            pH2Axis < bMin[hIdx2] - boundsMargin || pH2Axis > bMax[hIdx2] + boundsMargin ||
+            pUpAxis < bMin[upIdx] - boundsMargin || pUpAxis > bMax[upIdx] + boundsMargin) {
           this.resetParticle(i, false, elapsed)
           needsReset = true
           continue
@@ -625,11 +737,11 @@ export class SmokeSystem {
       if (distFromOrigin > 0.3) {
         const distFactor = Math.min(1, distFromOrigin / (4.0 * p.range))
         const spread = 0.012 * distFactor
-        this.velocities[i * 3] += (Math.random() - 0.5) * spread * delta
-        this.velocities[i * 3 + 1] += (Math.random() - 0.5) * spread * delta
-        this.velocities[i * 3 + 2] += (Math.random() - 0.5) * spread * delta
+        this.velocities[vH1] += (Math.random() - 0.5) * spread * delta
+        this.velocities[vH2] += (Math.random() - 0.5) * spread * delta
+        this.velocities[vUp] += (Math.random() - 0.5) * spread * delta
         // 阻尼让粒子不会无限加速
-        this.velocities[i * 3 + 1] *= 1.0 - 0.005 * delta
+        this.velocities[vUp] *= 1.0 - 0.005 * delta
       }
 
       const growthFactor = 1.0 + (0.03 + distFromOrigin * 0.02) * delta
