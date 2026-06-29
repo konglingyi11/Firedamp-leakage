@@ -728,7 +728,7 @@ defineExpose({
               min="0.2"
               max="4"
               step="0.1"
-              :value="goafGasParams.flameIntensity ?? 1.5"
+              :value="goafGasParams.flameIntensity ?? 2.5"
               @input="
                 updateGoafGasParam(
                   'flameIntensity',
@@ -736,7 +736,7 @@ defineExpose({
                 )
               " />
             <span class="goaf-gas-value">{{
-              (goafGasParams.flameIntensity ?? 1.5).toFixed(1)
+              (goafGasParams.flameIntensity ?? 2.5).toFixed(1)
             }}</span>
           </label>
         </div>

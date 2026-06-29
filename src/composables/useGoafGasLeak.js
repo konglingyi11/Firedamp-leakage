@@ -33,11 +33,13 @@ const DEFAULT_PARAMS = {
   surroundingAxis: 'auto',
   collisionEnabled: true,
   flameEnabled: true,
-  flameIntensity: 1.5,
-  flameSize: 2.5,
+  flameIntensity: 2.5,
+  flameSize: 4.0,
   flameColor: '#ff6600',
   explosionEnabled: true,
   explosionColor: '#ffaa33',
+  // 火球蔓延方向（矿道走向）：[x,y,z]，默认沿 +Y 轴（瓦斯/火焰向上部矿道蔓延）
+  fireballDirection: [0, 1, 0],
   smokeSize: 1.0,
   smokeDensity: 0.35,
   smokeSpeed: 0.45,
@@ -388,6 +390,7 @@ export function createGoafGasLeakSystem({
   let flameEffect = null
   let explosionEffect = null
   let fireballs = [] // 爆炸后沿矿道蔓延的火球列表
+  let triggerFireball = null // setup 中赋值为 triggerFireballPropagation，供手动爆炸调用
   let explosionTimer = null // 延迟爆炸定时器（点火后5s触发）
   let ignitionBlockId = 0 // 点火时生成的煤炭块 id（自燃效果）
   let surroundingGroup = null // 采空区两侧煤层 + 岩石层
@@ -1095,9 +1098,9 @@ export function createGoafGasLeakSystem({
   }
 
   function buildDefaultGasSources() {
-    // 默认单个泄漏源，位置固定为 (3.3, -3.5, 1.9)，与点火煤块坐标一致
+    // 默认单个泄漏源，位置固定为 (3.9812237949525975, -3.4071512376470725, 1.9)，与点火煤块坐标一致
     return [{
-      position: new THREE.Vector3(3.3, -3.5, 1.9),
+      position: new THREE.Vector3(3.9812237949525975, -3.4071512376470725, 1.9),
       type: 'goaf',
       emissionFactor: 1.0,
       height: 2,
@@ -1250,6 +1253,8 @@ export function createGoafGasLeakSystem({
     const collisionMeshes = currentParams.collisionEnabled ? collectCollisionMeshes() : []
     const surfaceSeeds = buildSurfaceSeeds()
     const smokeColors = buildSmokeColors()
+    // 烟雾活动边界：模型包围盒，超出则重生粒子，让烟雾在尽头消失
+    const smokeBounds = getModelBounds()
 
     smokeSystem = new SmokeSystem(
       currentParams.gasParticleCount,
@@ -1281,6 +1286,9 @@ export function createGoafGasLeakSystem({
           surfaceSeeds,
         },
         color: smokeColors,
+        // 烟雾活动边界：超出模型包围盒（带1.0余量）则重生粒子
+        bounds: smokeBounds && !smokeBounds.isEmpty() ? smokeBounds : null,
+        boundsMargin: 1.0,
         collision: collisionMeshes.length && currentParams.collisionEnabled
           ? {
               meshes: collisionMeshes,
@@ -1422,16 +1430,35 @@ export function createGoafGasLeakSystem({
     })
     controller.setSparkScene(scene)
 
+    // 火焰应能蔓延到模型水平边界，按包围盒计算最大半径
+    const flameBounds = getModelBounds()
+    const flameMaxRadius = flameBounds.isEmpty()
+      ? 10
+      : Math.max(
+          10,
+          Math.max(
+            Math.abs(ignitionSource.x - flameBounds.min.x),
+            Math.abs(ignitionSource.x - flameBounds.max.x),
+            Math.abs(ignitionSource.z - flameBounds.min.z),
+            Math.abs(ignitionSource.z - flameBounds.max.z),
+          ) * 0.95,
+        )
+    const flameSpreadSpeed = Math.max(2, flameMaxRadius / 4)
+
     flameEffect = new FlameEffect({
       position: ignitionSource,
       color: currentParams.flameColor,
       intensity: currentParams.flameIntensity,
       size: currentParams.flameSize,
-      maxSpreadRadius: 6 + currentParams.flameSize * 1.5,
-      spreadSpeed: 1.5 + currentParams.flameIntensity * 0.5,
+      maxSpreadRadius: flameMaxRadius,
+      spreadSpeed: flameSpreadSpeed,
     })
     flameEffect.addTo(scene)
     flameEffect.setVisible(false)
+    // 给火焰传入碰撞体（与烟雾共用同一套碰撞网格），避免火焰穿模
+    if (currentParams.collisionEnabled) {
+      flameEffect.setCollision(collectCollisionMeshes())
+    }
 
     explosionEffect = new ExplosionEffect({
       position: ignitionSource,
@@ -1443,49 +1470,64 @@ export function createGoafGasLeakSystem({
 
     /**
      * 爆炸触发后沿矿道方向蔓延的火球。
-     * 取模型包围盒的长边方向作为矿道走向，从点火点向正负两侧各发射一个火球。
+     * 矿道走向通过 currentParams.fireballDirection 配置（默认沿 +Y 轴向上），
+     * 从点火点向正负两侧蔓延，直到模型包围盒边界。
      */
+    triggerFireball = triggerFireballPropagation
     function triggerFireballPropagation() {
       if (!scene || !ignitionSource) return
       // 清理上一轮残留的火球
       disposeFireballs()
 
-      // 取模型包围盒长边方向作为矿道走向
+      // 读取火球蔓延方向（矿道走向）
+      const dirArr = Array.isArray(currentParams.fireballDirection) && currentParams.fireballDirection.length >= 3
+        ? currentParams.fireballDirection
+        : [0, 1, 0]
+      const dir = new THREE.Vector3(dirArr[0], dirArr[1], dirArr[2]).normalize()
+      if (dir.lengthSq() < 1e-6) dir.set(0, 1, 0)
+
       const bounds = getModelBounds()
-      const size = new THREE.Vector3()
-      bounds.getSize(size)
-      let dir = new THREE.Vector3(1, 0, 0) // 默认 X 轴
-      if (size.x >= size.y && size.x >= size.z) {
-        dir.set(1, 0, 0)
-      } else if (size.y >= size.x && size.y >= size.z) {
-        dir.set(0, 1, 0)
-      } else {
-        dir.set(0, 0, 1)
+      if (bounds.isEmpty()) {
+        console.warn('[GoafGas] 模型包围盒为空，跳过火球蔓延')
+        return
       }
-
-      // 蔓延距离取长边长度的 80%
-      const maxDist = Math.max(20, Math.max(size.x, size.y, size.z) * 0.8)
+      // 点火源在矿道方向轴上的投影坐标
+      const srcProj = ignitionSource.x * dir.x + ignitionSource.y * dir.y + ignitionSource.z * dir.z
+      // 包围盒在矿道方向上的两端投影（正确处理负方向：AABB 投影到任意方向）
+      const minProj =
+        (dir.x >= 0 ? bounds.min.x : bounds.max.x) * dir.x +
+        (dir.y >= 0 ? bounds.min.y : bounds.max.y) * dir.y +
+        (dir.z >= 0 ? bounds.min.z : bounds.max.z) * dir.z
+      const maxProj =
+        (dir.x >= 0 ? bounds.max.x : bounds.min.x) * dir.x +
+        (dir.y >= 0 ? bounds.max.y : bounds.min.y) * dir.y +
+        (dir.z >= 0 ? bounds.max.z : bounds.min.z) * dir.z
+      const distPositive = Math.max(1, maxProj - srcProj)
+      const distNegative = Math.max(1, srcProj - minProj)
       const fireballRadius = Math.max(1.2, (currentParams.flameSize || 2.5) * 0.7)
+      const fireballDuration = 4.5
 
-      // 沿正负两个方向各创建一个火球
-      const directions = [dir.clone(), dir.clone().negate()]
-      for (const d of directions) {
+      const configs = [
+        { direction: dir, maxDistance: distPositive },
+        { direction: dir.clone().negate(), maxDistance: distNegative },
+      ]
+      for (const cfg of configs) {
         const fb = new FireballEffect({
           position: ignitionSource,
-          direction: d,
+          direction: cfg.direction,
           color: currentParams.explosionColor || '#ff5500',
           intensity: currentParams.explosionIntensity || 1.5,
           radius: fireballRadius,
-          speed: 10,
-          maxDistance: maxDist,
-          duration: 3.5,
-          particleCount: 80,
+          speed: Math.max(4, cfg.maxDistance / fireballDuration),
+          maxDistance: cfg.maxDistance,
+          duration: fireballDuration,
+          particleCount: 240,
         })
         fb.addTo(scene)
         fb.trigger()
         fireballs.push(fb)
       }
-      console.log('[GoafGas] 火球蔓延触发，方向:', dir.toArray(), '距离:', maxDist)
+      console.log('[GoafGas] 火球蔓延触发，方向:', dir.toArray(), '+距离:', distPositive.toFixed(2), '-距离:', distNegative.toFixed(2))
     }
 
     function disposeFireballs() {
@@ -1546,13 +1588,10 @@ export function createGoafGasLeakSystem({
       } else if (smokeSystem?.mesh) {
         smokeSystem.mesh.visible = false
       }
-      // 点火状态下火焰跟随燃烧的煤炭块并随瓦斯浓度蔓延
+      // 点火状态下火焰跟随燃烧的煤炭块并一直蔓延到包围盒边界
       if (controller.currentStage === 'ignited') {
         syncFlameToIgnitionBlock()
-        const upperLimit = controller.settings.methaneUpperExplosiveLimit || 16
-        // 瓦斯浓度越高，火焰蔓延半径越大（最低 20%，最高 100%）
-        const methaneFactor = Math.min(1, Math.max(0.2, controller.methanePercent / upperLimit))
-        flameEffect?.setSpreadRadius(flameEffect.maxSpreadRadius * methaneFactor)
+        flameEffect?.setSpreadRadius(flameEffect.maxSpreadRadius)
       }
       flameEffect?.update(dt, elapsed)
       explosionEffect?.update(dt)
@@ -1777,7 +1816,9 @@ export function createGoafGasLeakSystem({
   }
 
   function triggerExplosion() {
-    if (currentParams.explosionEnabled) explosionEffect?.trigger()
+    if (!currentParams.explosionEnabled) return
+    explosionEffect?.trigger()
+    triggerFireball?.()
   }
 
   // 请求重建围岩层（带去抖）：切模型可见性时调用，避免轴向不对

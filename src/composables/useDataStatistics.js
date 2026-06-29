@@ -10,6 +10,58 @@ import {
 import { normalizeMonitoringPoints } from '@/utils/monitoringPointLayers'
 import { clampMonitoringPointToBounds } from '@/utils/monitoringPointDrag'
 import { simulatedRadarWaveSnapshot } from '@/utils/simulatedRadarProbe'
+import { isGoafTask } from '@/utils/taskType'
+
+/**
+ * 为采空区任务生成模拟的监测点时序数据。
+ * 不请求后端，直接返回结构合理的模拟值序列。
+ * @param {number} pointId 监测点 id
+ * @param {number} x 监测点 x 坐标
+ * @param {number} y 监测点 y 坐标
+ * @param {number} z 监测点 z 坐标
+ * @param {string[]} gasIds 需要生成的气体变量 id 列表
+ * @param {number} stepCount 时间步数量
+ * @returns {{ env: Record<string, number[]>, gases: Record<string, number[]> }}
+ */
+function generateGoafMockProbeData(pointId, x, y, z, gasIds, stepCount = 10) {
+  // 用坐标生成稳定种子，让同一监测点的数据可复现
+  const seed = Math.abs(pointId * 9301 + Math.round(x * 100) + Math.round(y * 10) + Math.round(z)) % 233280
+  let rngState = seed
+  const rand = () => {
+    rngState = (rngState * 9301 + 49297) % 233280
+    return rngState / 233280
+  }
+  // 距离原点距离用作基础扰动幅度
+  const distFactor = Math.min(1, Math.sqrt(x * x + y * y + z * z) / 50)
+
+  const env = {}
+  // 温度：295-320K，随时间缓慢上升
+  env.temperature = Array.from({ length: stepCount }, (_, i) =>
+    295 + rand() * 5 + i * (1 + distFactor) + Math.sin(i * 0.6) * 1.2,
+  )
+  // 压力：相对偏差 0.5-2 kPa
+  env.pressure = Array.from({ length: stepCount }, (_, i) =>
+    0.5 + rand() * 1.5 + Math.sin(i * 0.4 + pointId) * 0.3,
+  )
+  // 风速：0.2-1.5 m/s，带波动
+  env.windSpeed = Array.from({ length: stepCount }, (_, i) =>
+    0.2 + rand() * 0.8 + Math.sin(i * 0.5 + pointId * 0.3) * 0.25,
+  )
+  // 湿度：质量分数 0.005-0.02
+  env.humidity = Array.from({ length: stepCount }, (_, i) =>
+    0.005 + rand() * 0.012 + Math.sin(i * 0.3) * 0.002,
+  )
+
+  const gases = {}
+  gasIds.forEach((gasId) => {
+    // 不同气体给出不同量级，瓦斯(ch4) 给较高质量分数
+    const base = /ch4|methane/i.test(gasId) ? 0.02 : 0.005
+    gases[gasId] = Array.from({ length: stepCount }, (_, i) =>
+      base + rand() * base * 0.8 + i * base * 0.05 + Math.sin(i * 0.4) * base * 0.2,
+    )
+  })
+  return { env, gases }
+}
 
 export function useDataStatistics(options) {
   const { props, emit } = options
@@ -287,6 +339,40 @@ export function useDataStatistics(options) {
           (p) => String(p.id) === String(pointId),
         )
         if (!point) return
+
+        // 采空区任务：直接使用模拟数据，不请求后端
+        if (isGoafTask(props.currentTask)) {
+          const stepCount = timeOptions.value.length || 10
+          const { env, gases } = generateGoafMockProbeData(
+            Number(pointId) || 0,
+            point.x,
+            point.y,
+            point.z,
+            fetchGasIds,
+            stepCount,
+          )
+          Object.entries(ENV_VAR_KEYS).forEach(([key]) => {
+            const values = env[key]
+            if (!values) return
+            if (!envDataHistory.value[key]) envDataHistory.value[key] = {}
+            if (key === 'humidity')
+              envDataHistory.value[key][pointId] = values.map((v) => v * 100)
+            else if (key === 'pressure') {
+              const b =
+                (props.currentTask?.params?.operating_pressure || 101325) / 1000
+              envDataHistory.value[key][pointId] = values.map((v) => b + v)
+            } else if (key === 'temperature')
+              envDataHistory.value[key][pointId] = values.map((v) => v - 273.15)
+            else envDataHistory.value[key][pointId] = values
+          })
+          fetchGasIds.forEach((gasId) => {
+            if (!gasMassFractionData.value[gasId])
+              gasMassFractionData.value[gasId] = {}
+            gasMassFractionData.value[gasId][pointId] = gases[gasId] ?? []
+          })
+          return
+        }
+
         const res = await postProcessingApi.getPointProbeData({
           task_id: props.currentTask.id,
           variables: [...Object.values(ENV_VAR_KEYS), ...fetchGasIds],

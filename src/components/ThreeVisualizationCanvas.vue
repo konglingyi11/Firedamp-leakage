@@ -3359,6 +3359,51 @@ const boundsModeDelegate = createBoundsMode({
   getVisibleLayers: () => props.generatedVizLayers,
 })
 
+function setGeometryBounds(bounds) {
+  geometryBounds.value = bounds
+  if (bounds) {
+    boundsModeDelegate?.setBoundsData(bounds)
+  }
+}
+
+function computeLoadedGltfBoundsCm() {
+  if (!modelGroup || gltfModels.size === 0) return null
+  const box = new THREE.Box3()
+  let hasModel = false
+  for (const model of gltfModels.values()) {
+    if (!model) continue
+    model.updateMatrixWorld(true)
+    const modelBox = new THREE.Box3().setFromObject(model)
+    if (modelBox.isEmpty()) continue
+    if (!hasModel) {
+      box.copy(modelBox)
+      hasModel = true
+    } else {
+      box.union(modelBox)
+    }
+  }
+  if (!hasModel) return null
+  return {
+    min: [box.min.x * 100, box.min.y * 100, box.min.z * 100],
+    max: [box.max.x * 100, box.max.y * 100, box.max.z * 100],
+  }
+}
+
+function shouldPreferModelBoundsForCurrentTask() {
+  return Boolean(props.currentTask?.isSimulated) || isGoafTask(props.currentTask)
+}
+
+function applyModelBoundsAsGeometryBounds() {
+  if (!shouldPreferModelBoundsForCurrentTask() && normalizeModelBounds(geometryBounds.value)) {
+    return
+  }
+  const bounds = computeLoadedGltfBoundsCm()
+  if (bounds) {
+    setGeometryBounds(bounds)
+    console.log('[ThreeCanvas] 使用 GLTF 模型整体包围盒 (cm):', bounds)
+  }
+}
+
 async function syncVolumeToScene() {
   if (!volumeModeDelegate) return
   if (volumeSyncPromise) {
@@ -4584,6 +4629,8 @@ function loadGLTFModel(config, loadToken) {
         modelGroup.add(model)
 
         scaleModelToBounds()
+        // 当没有后端仿真域包围盒时，使用已加载 GLTF 模型的整体包围盒
+        applyModelBoundsAsGeometryBounds()
         // 采空区任务模型加载后重新初始化瓦斯泄漏系统，使泄漏源贴合模型包围盒
         // geometry（3.glb）和 real（1.glb）朝向不同，任一加载完成都需重建围岩层，
         // buildSurroundingLayers 内部会根据当前可见的模型 URL 选择正确轴向
@@ -7233,16 +7280,16 @@ watch(
   async (newTask) => {
     syncModelVisibility()
     if (newTask?.id) {
-      geometryBounds.value = null
+      setGeometryBounds(null)
       clearGLTFModel()
       ensureGLTFModelLoaded()
 
       if (newTask.status === 'completed') {
-        // 加载包围盒数据并更新 geometryBounds
+        // 加载仿真域包围盒数据；采空区/本地模拟任务 fallback 到 GLTF 模型整体包围盒
         const boundsData = await boundsModeDelegate.loadBounds(newTask.id)
         if (boundsData) {
-          geometryBounds.value = boundsData
-          console.log('[ThreeCanvas] 包围盒数据已加载:', boundsData)
+          setGeometryBounds(boundsData)
+          console.log('[ThreeCanvas] 仿真域包围盒数据已加载:', boundsData)
         }
       }
       rebuildSceneByMode()
@@ -7289,7 +7336,7 @@ watch(
         }
       }
     } else {
-      geometryBounds.value = null
+      setGeometryBounds(null)
       clearGLTFModel()
       disposeMeetingRoomSplat()
       boundsModeDelegate.dispose()

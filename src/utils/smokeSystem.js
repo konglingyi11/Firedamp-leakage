@@ -488,6 +488,9 @@ export class SmokeSystem {
     )
     const hasCollision = collisionMeshes.length > 0
     const velocityField = p.velocityField
+    // 烟雾活动边界：超出此范围的粒子会被重生，让烟雾在模型包围盒尽头消失
+    const bounds = p.bounds || null
+    const boundsMargin = Number(p.boundsMargin) || 0.5
     const velocitySampleStride = Math.max(
       1,
       Math.round(Number(velocityField?.stride) || 2),
@@ -598,6 +601,20 @@ export class SmokeSystem {
       this.positions[i * 3] = this.nextPosition.x
       this.positions[i * 3 + 1] = this.nextPosition.y
       this.positions[i * 3 + 2] = this.nextPosition.z
+
+      // 边界检测：粒子超出模型包围盒（带余量）则重生，让烟雾在尽头消失
+      if (bounds) {
+        const px = this.positions[i * 3]
+        const py = this.positions[i * 3 + 1]
+        const pz = this.positions[i * 3 + 2]
+        if (px < bounds.min.x - boundsMargin || px > bounds.max.x + boundsMargin ||
+            py < bounds.min.y - boundsMargin || py > bounds.max.y + boundsMargin ||
+            pz < bounds.min.z - boundsMargin || pz > bounds.max.z + boundsMargin) {
+          this.resetParticle(i, false, elapsed)
+          needsReset = true
+          continue
+        }
+      }
 
       // 基于到原点距离的三维扩散扰动，让远处粒子继续向外蔓延
       const distFromOrigin = Math.sqrt(

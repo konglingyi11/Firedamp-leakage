@@ -7,18 +7,41 @@ function createFlameTexture() {
   canvas.height = size
   const ctx = canvas.getContext('2d')
   const cx = size / 2
+  const cy = size * 0.68
 
   ctx.clearRect(0, 0, size, size)
 
-  const grad = ctx.createRadialGradient(cx, cx, 0, cx, cx, cx)
-  grad.addColorStop(0, 'rgba(255,255,255,0.95)')
-  grad.addColorStop(0.12, 'rgba(255,245,140,0.88)')
-  grad.addColorStop(0.28, 'rgba(255,170,50,0.70)')
-  grad.addColorStop(0.52, 'rgba(230,70,20,0.38)')
-  grad.addColorStop(0.78, 'rgba(120,20,5,0.10)')
-  grad.addColorStop(1, 'rgba(60,5,0,0)')
+  // 泪滴形火焰渐变：底部亮、顶部暗，边缘不规则
+  const grad = ctx.createRadialGradient(cx, cy + size * 0.1, 0, cx, cy, size * 0.55)
+  grad.addColorStop(0, 'rgba(255,255,255,0.98)')
+  grad.addColorStop(0.1, 'rgba(255,250,180,0.92)')
+  grad.addColorStop(0.25, 'rgba(255,190,60,0.78)')
+  grad.addColorStop(0.48, 'rgba(255,110,25,0.45)')
+  grad.addColorStop(0.74, 'rgba(160,45,10,0.16)')
+  grad.addColorStop(1, 'rgba(60,8,3,0)')
+
   ctx.fillStyle = grad
-  ctx.fillRect(0, 0, size, size)
+  ctx.beginPath()
+  ctx.moveTo(cx, size * 0.95)
+  ctx.bezierCurveTo(size * 0.14, size * 0.72, size * 0.1, size * 0.24, cx, size * 0.04)
+  ctx.bezierCurveTo(size * 0.9, size * 0.24, size * 0.86, size * 0.72, cx, size * 0.95)
+  ctx.fill()
+
+  // 叠加火舌细节
+  ctx.globalCompositeOperation = 'lighter'
+  for (let b = 0; b < 8; b++) {
+    const bx = cx + (Math.random() - 0.5) * size * 0.4
+    const by = size * 0.2 + Math.random() * size * 0.6
+    const br = size * (0.1 + Math.random() * 0.2)
+    const a = 0.15 + Math.random() * 0.2
+    const g = ctx.createRadialGradient(bx, by, 0, bx, by, br)
+    g.addColorStop(0, `rgba(255,190,70,${a})`)
+    g.addColorStop(1, 'rgba(255,60,20,0)')
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(bx, by, br, 0, Math.PI * 2)
+    ctx.fill()
+  }
 
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
@@ -87,10 +110,25 @@ export class CoalFlameEffect {
         uniform float uGlobalAlpha;
         varying float vAlpha;
         void main() {
-          vec4 tex = texture2D(uTexture, gl_PointCoord);
+          vec2 uv = gl_PointCoord;
+          vec4 tex = texture2D(uTexture, uv);
           if (tex.a < 0.01) discard;
-          vec3 color = mix(uColor, vec3(1.0, 0.95, 0.75), tex.r * 0.6);
-          float alpha = tex.a * vAlpha * uGlobalAlpha;
+          float d = length(uv - 0.5) * 2.0;
+
+          // 火焰色温：核心白热 -> 黄 -> 橙 -> 边缘暗红
+          vec3 core = vec3(1.0, 0.98, 0.85);
+          vec3 hot = vec3(1.0, 0.78, 0.18);
+          vec3 mid = vec3(1.0, 0.42, 0.04);
+          vec3 edge = vec3(0.75, 0.1, 0.02);
+
+          vec3 color = mix(core, hot, smoothstep(0.0, 0.22, d));
+          color = mix(color, mid, smoothstep(0.22, 0.55, d));
+          color = mix(color, edge, smoothstep(0.55, 0.95, d));
+          // 与全局色调融合
+          color = mix(color, uColor, 0.25);
+
+          // 边缘柔和淡出
+          float alpha = tex.a * (1.0 - smoothstep(0.75, 1.0, d)) * vAlpha * uGlobalAlpha;
           if (alpha < 0.005) discard;
           gl_FragColor = vec4(color, alpha);
         }

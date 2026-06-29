@@ -2738,6 +2738,7 @@ function handleRadarMediumApplySettings() {
           :type="activeModule === 'visualization' ? 'primary' : 'default'"
           class="nav-btn-visualization"
           plain
+          disabled
           @click="handleNavClick('visualization')">
           可视化设置
         </el-button>
@@ -2763,28 +2764,6 @@ function handleRadarMediumApplySettings() {
           @click="handleNavClick('analysis')">
           数据分析
         </el-button> -->
-
-        <el-dropdown
-          trigger="click"
-          @command="handleTutorialCommand"
-          popper-class="tutorial-dropdown-popper"
-          class="tutorial-dropdown">
-          <el-button type="default" plain>
-            <el-icon style="margin-right: 4px"><Reading /></el-icon>
-            教程
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu class="tutorial-dropdown-menu">
-              <el-dropdown-item
-                v-for="item in tutorialItems"
-                :key="item.command"
-                :command="item.command">
-                <div class="tutorial-item-title">{{ item.title }}</div>
-                <div class="tutorial-item-desc">{{ item.description }}</div>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
 
         <el-button type="danger" plain @click="handleResetScene">
           <el-icon style="margin-right: 4px"><Refresh /></el-icon>
