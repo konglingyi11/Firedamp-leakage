@@ -281,7 +281,7 @@ const GLTF_MODEL_CONFIGS = [
   {
     key: 'geometry',
     layerKind: 'model',
-    url: '/未细化.glb',
+    url: '/采空区/场景.glb',
     useTaskGlbUrl: true,
     rotation: [Math.PI / 2, 0, 0],
     meetingRoomRotation: [
@@ -316,6 +316,7 @@ const GLTF_MODEL_CONFIGS = [
     key: 'meetingRoomStandingIdle',
     layerKind: 'realModel',
     url: MEETING_ROOM_STANDING_IDLE_MODEL_URL,
+    disabled: true,
     meetingRoomOnly: true,
     loadWithoutBounds: true,
     rotation: [Math.PI / 2, Math.PI, 0],
