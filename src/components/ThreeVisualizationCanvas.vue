@@ -252,6 +252,7 @@ let goafGasSystem = null
 
 const volumePayloadPending = new Map()
 const geometryBounds = ref(null)
+const modelLoading = ref(false)
 const AXIS_HELPERS_GROUP_NAME = '__xyzAxisHelpers'
 const GROUND_PLANE_BOUNDS_OFFSET = 0.04
 let lastVolumeFocusKey = ''
@@ -2512,7 +2513,7 @@ function focusCameraOnRealModelInitial() {
   const size = box.getSize(new THREE.Vector3())
   const maxDim = Math.max(size.x, size.y, size.z, 0.5)
   const fovRad = (camera.fov * Math.PI) / 360
-  const distance = (maxDim / (2 * Math.tan(fovRad))) * 0.5
+  const distance = (maxDim / (2 * Math.tan(fovRad))) * 0.35
 
   controls.target.copy(center)
   // 正面视角：从 -Y 方向看向模型中心（Z 轴为竖直向上）
@@ -3623,7 +3624,7 @@ function resetMainCameraView() {
   }
 
   const maxDim = Math.max(size.x, size.y, size.z, 1)
-  const dist = Math.max(8, maxDim * 1.2)
+  const dist = Math.max(6, maxDim * 0.8)
   // 正面视角：从 -Y 方向看向模型中心
   camera.position.set(center.x, center.y - dist, center.z)
   camera.near = 0.01
@@ -4363,6 +4364,7 @@ function ensureGLTFModelLoaded() {
   }
 
   const loadToken = gltfModelLoadToken
+  modelLoading.value = true
   const promises = loadableConfigs.map((config) => {
     const existingPromise = gltfModelLoadPromises.get(config.key)
     if (gltfModels.has(config.key)) return Promise.resolve(gltfModels.get(config.key))
@@ -4376,10 +4378,14 @@ function ensureGLTFModelLoaded() {
     gltfModelLoadPromises.set(config.key, promise)
     return promise
   })
-  return Promise.all(promises).then((models) => {
-    syncModelVisibility()
-    return models
-  })
+  return Promise.all(promises)
+    .then((models) => {
+      syncModelVisibility()
+      return models
+    })
+    .finally(() => {
+      modelLoading.value = false
+    })
 }
 
 function normalizeModelBounds(rawBounds) {
@@ -7726,6 +7732,10 @@ function disposeMaterial(material) {
 <template>
   <div class="three-shell">
     <div ref="hostRef" class="three-canvas"></div>
+    <div v-if="modelLoading" class="three-model-loading">
+      <div class="three-model-loading__spinner"></div>
+      <div class="three-model-loading__text">模型加载中...</div>
+    </div>
     <div
       v-if="sceneContextMenu.visible"
       class="main-scene-context-menu"
@@ -8331,6 +8341,40 @@ function disposeMaterial(material) {
   font-size: 12px;
   font-weight: 650;
   cursor: pointer;
+}
+
+.three-model-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.three-model-loading__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #00f3ff;
+  border-radius: 50%;
+  animation: three-model-loading-spin 0.8s linear infinite;
+}
+
+.three-model-loading__text {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+@keyframes three-model-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .geometry-selection-popup__hide:hover {
