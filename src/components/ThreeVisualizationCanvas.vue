@@ -300,9 +300,8 @@ const GLTF_MODEL_CONFIGS = [
   {
     key: 'real',
     layerKind: 'realModel',
-    url: '/细化.glb',
+    url: '/采空区/场景.glb',
     useTaskRealModelUrl: true,
-    disabled: true,
     rotation: [Math.PI / 2, 0, 0],
     meetingRoomRotation: [MEETING_ROOM_SURFACE_ROTATION_X, 0, MEETING_ROOM_OVERALL_ROTATION_Z + MEETING_ROOM_FLOOR_ROTATION_Z],
     scaleToBounds: false,
