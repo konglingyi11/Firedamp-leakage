@@ -191,6 +191,17 @@ export function useHomeTaskManager(options = {}) {
     }
   }
 
+  // 构造合成模拟任务（采空区瓦斯泄漏模拟），供 activateSavedTask 各失败分支回退使用
+  function createSyntheticGoafTask() {
+    return {
+      ...createMockGoafTask({ name: '采空区瓦斯泄漏模拟', isSimulated: true }),
+      ...createMockGoafModelInfo(),
+      geometry_model_url: '/采空区/场景.glb',
+      real_model_url: '/采空区/场景.glb',
+      isSimulated: true,
+    }
+  }
+
   async function activateSavedTask() {
     try {
       const savedTaskId = localStorage.getItem('activeTaskId')
@@ -200,13 +211,7 @@ export function useHomeTaskManager(options = {}) {
 
       if (!taskToActivate?.id) {
         // 没有保存的任务也没有后端任务时，默认选中「采空区瓦斯泄漏模拟」
-        const syntheticTask = {
-          ...createMockGoafTask({ name: '采空区瓦斯泄漏模拟', isSimulated: true }),
-          ...createMockGoafModelInfo(),
-          geometry_model_url: '/采空区/场景.glb',
-          real_model_url: '/采空区/场景.glb',
-          isSimulated: true,
-        }
+        const syntheticTask = createSyntheticGoafTask()
         setCurrentTask(syntheticTask)
         onTaskLoaded?.(syntheticTask, { completed: false })
         return
@@ -226,12 +231,20 @@ export function useHomeTaskManager(options = {}) {
 
             onTaskLoaded?.(task, { completed })
           } else {
-            console.warn('Task not found, clearing activeTaskId')
+            // 任务详情加载失败（如 mock adapter 返回空对象）：回退到合成模拟任务，
+            // 避免仅清除 localStorage 而不设置 currentTask，导致页面空载
+            console.warn('Task not found, falling back to synthetic mock task')
             localStorage.removeItem('activeTaskId')
+            const syntheticTask = createSyntheticGoafTask()
+            setCurrentTask(syntheticTask)
+            onTaskLoaded?.(syntheticTask, { completed: false })
           }
         } catch (taskError) {
-          console.warn('Failed to load task, clearing activeTaskId:', taskError)
+          console.warn('Failed to load task, falling back to synthetic mock task:', taskError)
           localStorage.removeItem('activeTaskId')
+          const syntheticTask = createSyntheticGoafTask()
+          setCurrentTask(syntheticTask)
+          onTaskLoaded?.(syntheticTask, { completed: false })
         }
       }
     } catch (error) {

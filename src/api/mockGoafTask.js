@@ -10,10 +10,8 @@ const GOAF_GEOMETRY_MODEL_URL = '/采空区/场景.glb'
 const GOAF_REAL_MODEL_URL = '/采空区/场景.glb'
 
 export function isGoafMockEnabled() {
-  return (
-    import.meta.env.VITE_MOCK_GOAF === 'true' ||
-    localStorage.getItem('mockGoaf') === '1'
-  )
+  // 当前阶段所有后端接口都走模拟数据，无需请求真实后端
+  return true
 }
 
 export function setGoafMockEnabled(enabled) {
