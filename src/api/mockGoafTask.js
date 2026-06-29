@@ -6,8 +6,9 @@
 export const MOCK_GOAF_TASK_ID = 'mock-goaf-task'
 export const MOCK_GOAF_MODEL_ID = 'mock-goaf-model'
 
-const GOAF_GEOMETRY_MODEL_URL = '/采空区/场景.glb'
-const GOAF_REAL_MODEL_URL = '/采空区/场景.glb'
+const GOAF_GEOMETRY_MODEL_URL =
+  'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/场景.glb'
+const GOAF_REAL_MODEL_URL = 'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/场景.glb'
 
 export function isGoafMockEnabled() {
   // 当前阶段所有后端接口都走模拟数据，无需请求真实后端
@@ -57,7 +58,8 @@ export function createMockGoafModelInfo(overrides = {}) {
     real_model_file: GOAF_REAL_MODEL_URL,
     glb_url: GOAF_GEOMETRY_MODEL_URL,
     glbFileUrl: GOAF_GEOMETRY_MODEL_URL,
-    preview_url: '/采空区/图片.png',
+    preview_url:
+      'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/图片.png',
     ...overrides,
   }
 }

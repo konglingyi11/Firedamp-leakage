@@ -196,8 +196,10 @@ export function useHomeTaskManager(options = {}) {
     return {
       ...createMockGoafTask({ name: '采空区瓦斯泄漏模拟', isSimulated: true }),
       ...createMockGoafModelInfo(),
-      geometry_model_url: '/采空区/场景.glb',
-      real_model_url: '/采空区/场景.glb',
+      geometry_model_url:
+        'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/场景.glb',
+      real_model_url:
+        'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/场景.glb',
       isSimulated: true,
     }
   }

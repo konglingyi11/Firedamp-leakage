@@ -282,7 +282,7 @@ const GLTF_MODEL_CONFIGS = [
   {
     key: 'geometry',
     layerKind: 'model',
-    url: '/采空区/场景.glb',
+    url: 'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/场景.glb',
     useTaskGlbUrl: true,
     rotation: [Math.PI / 2, 0, 0],
     meetingRoomRotation: [
@@ -301,7 +301,7 @@ const GLTF_MODEL_CONFIGS = [
   {
     key: 'real',
     layerKind: 'realModel',
-    url: '/采空区/场景.glb',
+    url: 'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/场景.glb',
     useTaskRealModelUrl: true,
     rotation: [Math.PI / 2, 0, 0],
     meetingRoomRotation: [MEETING_ROOM_SURFACE_ROTATION_X, 0, MEETING_ROOM_OVERALL_ROTATION_Z + MEETING_ROOM_FLOOR_ROTATION_Z],

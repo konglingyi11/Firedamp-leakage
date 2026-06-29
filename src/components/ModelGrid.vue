@@ -174,7 +174,7 @@ const fetchModels = async () => {
       category: '采空区',
       survivalSpace: '-',
       difficulty: '-',
-      image: '/public/采空区/图片.png',
+      image: 'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/图片.png',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       is_analyzed: true,
