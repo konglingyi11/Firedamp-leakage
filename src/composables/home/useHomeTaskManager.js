@@ -5,6 +5,10 @@ import postProcessingApi from '@/api/postProcessing.js'
 import { useTaskStore } from '@/stores/task.js'
 import { ElMessage } from 'element-plus'
 import { isGoafTask } from '@/utils/taskType'
+import {
+  createMockGoafTask,
+  createMockGoafModelInfo,
+} from '@/api/mockGoafTask.js'
 
 // 采空区任务本地模型路径（与 ThreeVisualizationCanvas 保持一致）
 const GOAF_GEOMETRY_MODEL_URL = '/采空区/场景.glb'
@@ -193,6 +197,20 @@ export function useHomeTaskManager(options = {}) {
       const taskToActivate = savedTaskId
         ? { id: savedTaskId }
         : await getLatestTaskFromList()
+
+      if (!taskToActivate?.id) {
+        // 没有保存的任务也没有后端任务时，默认选中「采空区瓦斯泄漏模拟」
+        const syntheticTask = {
+          ...createMockGoafTask({ name: '采空区瓦斯泄漏模拟', isSimulated: true }),
+          ...createMockGoafModelInfo(),
+          geometry_model_url: '/采空区/场景.glb',
+          real_model_url: '/采空区/场景.glb',
+          isSimulated: true,
+        }
+        setCurrentTask(syntheticTask)
+        onTaskLoaded?.(syntheticTask, { completed: false })
+        return
+      }
 
       if (taskToActivate?.id) {
         try {
