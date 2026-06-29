@@ -90,12 +90,16 @@ const GAS_SOURCE_MARKER_SIZE = 0.12
 const GAS_SOURCE_LINE_COLOR = 0xff7a45
 
 // 煤/岩贴图：围岩层和动态块共用同一份缓存
-const COAL_TEXTURE_URL = '/采空区/煤炭.jpg'
-const ROCK_TEXTURE_URL = '/采空区/石头.jpg'
+const COAL_TEXTURE_URL =
+  'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/煤炭.jpg'
+const ROCK_TEXTURE_URL =
+  'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/采空区/石头.jpg'
 
 // 煤/岩高模块模型：动态块优先使用这些 GLB，而不是 BoxGeometry
-const COAL_BLOCK_MODEL_URL = '/采空区/4(1).glb'
-const ROCK_BLOCK_MODEL_URL = '/采空区/5(1).glb'
+const COAL_BLOCK_MODEL_URL =
+  'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/%E9%87%87%E7%A9%BA%E5%8C%BA/4%281%29.glb'
+const ROCK_BLOCK_MODEL_URL =
+  'https://caikongqu-1315816428.cos.ap-nanjing.myqcloud.com/%E9%87%87%E7%A9%BA%E5%8C%BA/5%281%29.glb'
 
 let sharedTextureLoader = null
 const blockTextureCache = new Map() // url -> THREE.Texture
