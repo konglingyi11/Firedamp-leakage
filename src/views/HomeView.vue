@@ -2731,6 +2731,7 @@ function handleRadarMediumApplySettings() {
           :type="activeModule === 'radarEm' ? 'primary' : 'default'"
           class="nav-btn-radar-em"
           plain
+          disabled
           @click="handleNavClick('radarEm')">
           雷达
         </el-button>
